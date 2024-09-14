@@ -122,6 +122,7 @@ __Leveraging the simplicity of Go is the key to improving our Go skills__
 
 <div class="font-size-3">Let's see it with some examples</div>
 </v-clicks>
+
 ---
 transition: fade-out
 ---
@@ -228,8 +229,6 @@ err := fmt.Errorf("an error occurred: %s", oErr.Error())
 
 Making a reference to an error via its value (%\[s|q|v]) makes it more difficult to handle
 - Unit tests broken because the error message was not matching the one expected
-
-<img src="/images/shocked.gif" class="m-1 h-40 rounded shadow" />
 
 To our help, error wrapping was released with Go [v1.13](https://tip.golang.org/doc/go1.13#error_wrapping) and multi-error wrapping with Go [v1.20](https://tip.golang.org/doc/go1.20#errors)
 
