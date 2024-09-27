@@ -39,9 +39,19 @@ mdc: true
 
 ---
 transition: fade-out
+layout: lblue-fact
 ---
 
-# Intro
+Games help you develop skills!
+<v-click>
+<div class="font-size-8">and they work perfectly with Go</div>
+</v-click>
+
+---
+transition: fade-out
+---
+
+# Notes
 
 GRAPHS AND GAMES: CAN GO TAKE A TICKET TO RIDE?
 
@@ -57,6 +67,8 @@ The outline of the talk should go this way
 
 LEVEL: Introductory and Overview
 
+Add references to Daniela Petruzalek talk on Pacman and Drishti Jain for how to create a game in Go (and wallrush too)
+
 ---
 transition: fade-out
 layout: image-right
@@ -66,19 +78,17 @@ backgroundSize: 80%
 
 # Whoami
 
-About myself
+About myself (note: change picture)
 
 I’m a Gopher since 2018
 - Practised via the [Tour of Go](https://go.dev/tour/) and [exercism](https://exercism.org/)
+- I have previously worked in Java, Scala and C++
 
 I work in Amadeus in a team that creates tooling in Go to assist applications deploying in the cloud
 
 I speak at conferences, about Go and cloud topics
 
-I previously worked in Java, Scala and C++
-
-Besides programming I enjoy swimming, cooking and learning languages
-- GOのワークショップへようこそ！
+Besides programming I enjoy swimming, cooking, learning languages and board games
 
 <!-- 
 Bio: I'm Michele, Italian from Sicily, I am a passionate Gopher since 2018 and before then I used to work in Java, Scala and C++. I always like make side projects and develop new things when time let's me :D. Besides programming, I enjoy swimming, cooking and learning languages; currently, I'm learning Japanese: GOのワークショップへようこそ！ 
@@ -91,45 +101,145 @@ You can find me in:
 
 ---
 transition: fade-out
-layout: fact
-class: 'text-white bg-#00ADD8 font-size-10'
+layout: image-right
+image: /images/TTR_USA_map.jpg
+backgroundSize: 97%
 ---
 
-Go is a simple language
+# The board game of the day
+
+Ticket to Ride
+
+<v-click>
+
+In this game you have:
+</v-click>
+
+<v-clicks>
+
+- A board representing the map of the United States with cities and railway lines
+- A set of trains and cards to spend to occupy railway lines
+- A set of objectives to give you more points
+</v-clicks>
+
+<v-click>
+
+The player with most points wins
+</v-click>
 
 ---
 transition: fade-out
 layout: image-right
-image: /images/Gophers1.jpeg
-backgroundSize: 80%
+image: /images/TTR_USA_map.jpg
+backgroundSize: 97%
 ---
 
-# Why is it important?
+# That really looks like a graph to me
 
-Striving for simplicity
+Ticket to Ride
 
-<v-clicks>
+The cities are vertices
 
-As Go is simple to learn, you can adopt it __faster__ for your everyday work
+The railway links are the edges
 
-As Go is simple to write, you can write __clearer__ code
+The game can be analyzed using graph algorithms which can be difficult but Go will make the much easier
 
-As Go is simple to read, __anyone__ with basic Go skills will be able to understand it __more easily__
-
-<br/>
-
-__Leveraging the simplicity of Go is the key to improving our Go skills__
-
-<div class="font-size-3">Let's see it with some examples</div>
-</v-clicks>
+Let's see how
 
 ---
 transition: fade-out
 ---
 
-# Example #1
+# Go and Graphs
 
-Transferring data from a source to a target
+Introduction
+
+We have two elements for Go and Graphs to go together
+
+1. Go can easily be written line by line from pseudocode
+2. Go has generics and interfaces which can help in making data structure adaptable to any kind of data
+
+In other words we can decouple the data structure itself from the kind of data it holds
+
+---
+transition: fade-out
+---
+
+# Go and Graphs
+
+Some concepts on the graphs
+
+A vertex is a node that is holding data, for simplicity we will have it comparable
+
+```go
+type Vertex[T comparable] struct { 
+  E T 
+}
+```
+
+An edge is a pair of vertices that can hold some properties
+
+```go
+type Edge[T comparable] struct {
+	X, Y *Vertex[T]
+	P    EdgeProperty
+}
+type EdgeProperty any
+```
+
+---
+transition: fade-out
+---
+
+# Go and Graphs
+
+Some concepts on the graphs
+
+A graph then is a collection of edges and vertices
+
+We can represent a graph in several ways but they all share in common a certain set of behaviors (aka. an interface)
+
+```go
+type Graph[T comparable] interface { 
+  Vertices() []*Vertex[T]
+	Edges() []*Edge[T]
+	AddVertex(v *Vertex[T])
+	RemoveVertex(v *Vertex[T])
+	ContainsVertex(v *Vertex[T]) bool
+	AddEdge(e *Edge[T])
+	RemoveEdge(e *Edge[T])
+	ContainsEdge(e *Edge[T]) bool
+}
+```
+
+One common representation of a graph is the list of vertices:
+
+```go
+type ArcsList[T comparable] struct {
+	v        []*Vertex[T]
+	e        []*Edge[T]
+}
+```
+
+---
+transition: fade-out
+---
+
+# Go and Graphs
+
+Once we have a graph up
+
+We can start reasoning on it using the algorithms we have at our disposal
+
+TO CONTINUE
+
+---
+transition: fade-out
+---
+
+# Go and Graphs
+
+Some concepts on the graphs
 
 <v-click>
 
