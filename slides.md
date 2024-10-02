@@ -227,11 +227,46 @@ transition: fade-out
 
 # Go and Graphs
 
-Once we have a graph up
+Using ticket to ride as an example
 
-We can start reasoning on it using the algorithms we have at our disposal
+Once we have a graph up, we can start reasoning on it using the algorithms we have at our disposal
 
-TO CONTINUE
+- Is there a path connecting a city to another one
+  - At the beginning all of the cities are connected
+  - As soon as we occupy railway links and remove them from the initial graph this may not be the case any more
+- In graph algorithm terms
+  - Are the two nodes in the same connected component
+
+---
+transition: fade-out
+---
+
+# Go and Graphs
+
+Using ticket to ride as an example
+
+Once we have a graph up, we can start reasoning on it using the algorithms we have at our disposal
+
+- What is the shortest path between the two cities
+  - This evolves when railway links are occupied
+- In graph algorithm terms
+  - Looking for the shortest path between two nodes
+
+
+---
+transition: fade-out
+---
+
+# Go and Graphs
+
+Using ticket to ride as an example
+
+Once we have a graph up, we can start reasoning on it using the algorithms we have at our disposal
+
+- What is the shortest path between the two cities
+  - This evolves when railway links are occupied
+- In graph algorithm terms
+  - Looking for the shortest path between two nodes
 
 ---
 transition: fade-out
