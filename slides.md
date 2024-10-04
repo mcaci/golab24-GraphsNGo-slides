@@ -42,9 +42,9 @@ transition: fade-out
 layout: lblue-fact
 ---
 
-Games help you develop skills!
+Games help you develop skills
 <v-click>
-<div class="font-size-8">and they work perfectly with Go</div>
+<div class="font-size-8">and it applies well to Go skills</div>
 </v-click>
 
 ---
@@ -67,8 +67,6 @@ The outline of the talk should go this way
 
 LEVEL: Introductory and Overview
 
-Add references to Daniela Petruzalek talk on Pacman and Drishti Jain for how to create a game in Go (and wallrush too)
-
 ---
 transition: fade-out
 layout: image-right
@@ -76,19 +74,23 @@ image: /images/michele.jpeg
 backgroundSize: 80%
 ---
 
-# Whoami
+# About myself
 
-About myself (note: change picture)
+whoami (note: change picture)
 
-I’m a Gopher since 2018
-- Practised via the [Tour of Go](https://go.dev/tour/) and [exercism](https://exercism.org/)
-- I have previously worked in Java, Scala and C++
+I am a Gopher since 2018
 
-I work in Amadeus in a team that creates tooling in Go to assist applications deploying in the cloud
+- but also have experiences in other programming languages
 
-I speak at conferences, about Go and cloud topics
+My company is Amadeus
 
-Besides programming I enjoy swimming, cooking, learning languages and board games
+- my team that creates middleware tools in Go that help configure applications deployed in the cloud
+
+I speak at conferences
+
+- mostly about Go and cloud topics
+
+On my free time I enjoy swimming, cooking, learning languages and playing board games
 
 <!-- 
 Bio: I'm Michele, Italian from Sicily, I am a passionate Gopher since 2018 and before then I used to work in Java, Scala and C++. I always like make side projects and develop new things when time let's me :D. Besides programming, I enjoy swimming, cooking and learning languages; currently, I'm learning Japanese: GOのワークショップへようこそ！ 
@@ -106,55 +108,54 @@ image: /images/TTR_USA_map.jpg
 backgroundSize: 97%
 ---
 
-# The board game of the day
+# Today's board game
 
 Ticket to Ride
-
-<v-click>
-
-In this game you have:
-</v-click>
 
 <v-clicks>
 
-- A board representing the map of the United States with cities and railway lines
-- A set of trains and cards to spend to occupy railway lines
-- A set of objectives to give you more points
+The board represents the map of the United States with city train stations and railway lines
+
+The resources are train tokens and colored cards that are spent to occupy railway lines
+- e.g. if you want to occupy the line between Miami and Atlanta you'll need to spend 5 trains tokens and 5 blue cards
+
+The objective is to make the highest amount of points
+- occupying railway lines gives points
+- connecting the cities from objective cards gives even more points 
 </v-clicks>
 
-<v-click>
-
-The player with most points wins
-</v-click>
+---
+transition: fade-out
+layout: image
+image: /images/aGraphToMe.jpeg
+backgroundSize: fit 
+---
 
 ---
 transition: fade-out
-layout: image-right
+layout: image
 image: /images/TTR_USA_map.jpg
-backgroundSize: 97%
+backgroundSize: fit 
 ---
 
-# That really looks like a graph to me
-
-Ticket to Ride
-
-The cities are vertices
-
-The railway links are the edges
-
-The game can be analyzed using graph algorithms which can be difficult but Go will make the much easier
-
-Let's see how
+---
+transition: fade-out
+layout: image
+image: /images/aGraphToMeReallyYeah.jpeg
+backgroundSize: fit 
+---
 
 ---
 transition: fade-out
 ---
 
-# Go and Graphs
+# Ticket to Ride as a Graph
 
-Introduction
+And it's relationship with Go
 
-We have two elements for Go and Graphs to go together
+The game can be analyzed using graph algorithms and we will see how Go makes them easy
+
+Let's see how, there are two elements that stand out:
 
 1. Go can easily be written line by line from pseudocode
 2. Go has generics and interfaces which can help in making data structure adaptable to any kind of data
@@ -165,9 +166,9 @@ In other words we can decouple the data structure itself from the kind of data i
 transition: fade-out
 ---
 
-# Go and Graphs
+# Go and Graphs: basic concepts
 
-Some concepts on the graphs
+Vertex
 
 A vertex is a node that is holding data, for simplicity we will have it comparable
 
@@ -177,7 +178,24 @@ type Vertex[T comparable] struct {
 }
 ```
 
-An edge is a pair of vertices that can hold some properties
+For Ticket to Ride a vertex is a train station which translates into
+
+```go
+type City string
+// that will be instantiated in
+newYork := Vertex[City]{E: "New York"}
+washington := Vertex[City]{E: "Washington"}
+```
+
+---
+transition: fade-out
+---
+
+# Go and Graphs: basic concepts
+
+Edge
+
+An edge is a pair of vertices that can hold any property
 
 ```go
 type Edge[T comparable] struct {
@@ -187,17 +205,33 @@ type Edge[T comparable] struct {
 type EdgeProperty any
 ```
 
+For Ticket to Ride an edge is a railway link between two cities
+
+```go
+type City string
+// Edge
+type TrainLine Edge[City]
+// EdgeProperty to attach to the P field in the Edge
+type TrainLineProperty struct {
+	Distance int
+}
+// that will be instantiated in
+newYork := Vertex[City]{E: "New York"}
+washington := Vertex[City]{E: "Washington"}
+newYorkWashington := Edge[City]{X: &newYork, Y: washington, P: TrainLineProperty{Distance: 2}}
+```
+
 ---
 transition: fade-out
 ---
 
-# Go and Graphs
+# Go and Graphs: basic concepts
 
-Some concepts on the graphs
+Graph
 
 A graph then is a collection of edges and vertices
 
-We can represent a graph in several ways but they all share in common a certain set of behaviors (aka. an interface)
+We can represent a graph in several ways but they share a set of common behaviors
 
 ```go
 type Graph[T comparable] interface { 
@@ -212,20 +246,36 @@ type Graph[T comparable] interface {
 }
 ```
 
-One common representation of a graph is the list of vertices:
+One concrete representation of a graph is the list of vertices and edges:
 
 ```go
 type ArcsList[T comparable] struct {
 	v        []*Vertex[T]
 	e        []*Edge[T]
 }
+// that for a ticket to ride board will be will be instantiated in
+newYork := Vertex[City]{E: "New York"}
+washington := Vertex[City]{E: "Washington"}
+newYorkWashington := Edge[City]{X: &newYork, Y: washington, P: TrainLineProperty{Distance: 2}}
+// ...
+board := ArcsList[City]{
+  v: []*Vertex[City]{ &newYork ,&washington, ... }
+  e: []*Vertex[Edge]{ &newYorkWashington, ... }
+}
 ```
+
+Other representations are 
+
+- Adjacency lists
+- Adjacency matrices
+- Incidence lists
+- Incidence matrices
 
 ---
 transition: fade-out
 ---
 
-# Go and Graphs
+# Go and Graphs: algorithms
 
 Using ticket to ride as an example
 
@@ -252,21 +302,37 @@ Once we have a graph up, we can start reasoning on it using the algorithms we ha
 - In graph algorithm terms
   - Looking for the shortest path between two nodes
 
+---
+transition: fade-out
+---
+
+# Gameplay
+
+How does a player selects the next move
+
+Let's see what happens in the random case:
+
+Execution of a random game
 
 ---
 transition: fade-out
 ---
 
-# Go and Graphs
+# Gameplay
 
-Using ticket to ride as an example
+How does a player selects the next move
 
-Once we have a graph up, we can start reasoning on it using the algorithms we have at our disposal
+Let's use the knowledge we take from the graph to better select the line to occupy
 
-- What is the shortest path between the two cities
-  - This evolves when railway links are occupied
-- In graph algorithm terms
-  - Looking for the shortest path between two nodes
+Execution of a game using the connectivity and shortest path algoritms
+
+---
+transition: fade-out
+---
+
+# Next steps
+
+How can the gameplay improve with the algorithms we have at our disposal?
 
 ---
 transition: fade-out
@@ -460,30 +526,30 @@ backgroundSize: 80%
 
 # Conclusions
 
-Striving for simplicity
+Go and Games go well together
 
 <v-click>
 
-The topic of simplicity is not new
+Games are a good opportunity to practise and learn new aspects of Go
 
-- Rob Pike's [talk](https://www.youtube.com/watch?v=rFejpH_tAHM&t=1s): Simplicity is Complicated;
-- Go Time's episode [#296](https://changelog.com/gotime/296): Principles of simplicity;
+Go makes it easy to have a minimun example of gameplay working
 
 </v-click>
 
-<v-click>Today we saw simplicity in action with few gems</v-click>
+<v-click>Go makes it easy to be able to implement algorithms</v-click>
 
 <v-click>
 
-__What you can do__ is from time to time have a look at:
+There are other examples of developing games in Go:
 
-- the [standard library](https://pkg.go.dev/std) packages
-- the [release notes](https://tip.golang.org/doc/devel/release)
+- Daniela Petruzalek's talks [Building an Indie Game in GO](https://www.youtube.com/watch?v=Oce77qCXu7I) and [Pacman from scratch](https://www.youtube.com/watch?v=SM8LTMnB4x0);
+- Drishti Jain's talk [Go Beyond the Console: Developing 2D Games in Go](https://www.youtube.com/watch?v=OBKULmYQbuU);
+- https://github.com/mcaci/wallrush to check
 </v-click>
 
 <v-click>
 
-__Because these are the places where you'll find the most valuable gems to make your Go code simpler__
+__Take advantage of the simplicity that Go brings you__
 </v-click>
 
 ---
@@ -492,7 +558,7 @@ transition: fade-out
 class: "font-size-7.8"
 ---
 
-And making our code simpler is how we step up our Go game!
+And it will enable us to implement algorithms faster and more reliably!
 
 ---
 layout: lblue-end
@@ -520,3 +586,4 @@ Thank you very much!
     </a>
   </div>
 </div>
+<img src="/images/michelecaciQR.jpeg" class="absolute bottom-5 right-5 text-right" style="width: 20%; height: auto;"/>
