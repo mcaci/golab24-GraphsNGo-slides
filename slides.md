@@ -44,8 +44,14 @@ layout: lblue-fact
 
 Games help you develop skills
 <v-click>
-<div class="font-size-8">and it applies well to Go skills</div>
+<div class="font-size-8">and Go makes game development easy</div>
 </v-click>
+
+<!-- 
+I want to start with this statement that comes from my personal experience. And this conviction has increased a lot by watching my son playing, during the course of his first year of age. He turned 1 year just a month ago by the way.
+
+Games help you develop skills and for what it matters to us, Go makes game development easy and today we'll see how.
+-->
 
 ---
 transition: fade-out
@@ -93,7 +99,7 @@ I speak at conferences
 On my free time I enjoy swimming, cooking, learning languages and playing board games
 
 <!-- 
-Bio: I'm Michele, Italian from Sicily, I am a passionate Gopher since 2018 and before then I used to work in Java, Scala and C++. I always like make side projects and develop new things when time let's me :D. Besides programming, I enjoy swimming, cooking and learning languages; currently, I'm learning Japanese: GOのワークショップへようこそ！ 
+I'm Michele, Italian from Sicily, I am a passionate Gopher since 2018 and before then I used to work in Java, Scala and C++. I always like make side projects and develop new things. Besides programming, I enjoy swimming, cooking and learning languages; currently, I'm learning Japanese: GOのワークショップへようこそ！ 
 
 You can find me in:
 - github: [mcaci](https://github.com/mcaci)
@@ -110,19 +116,33 @@ backgroundSize: 97%
 
 # Today's board game
 
-Ticket to Ride
+Ticket to Ride (add detailed picture of Miami-Atlanta)
 
 <v-clicks>
 
-The board represents the map of the United States with city train stations and railway lines
+The board represents the United States map
 
-The resources are train tokens and colored cards that are spent to occupy railway lines
-- e.g. if you want to occupy the line between Miami and Atlanta you'll need to spend 5 trains tokens and 5 blue cards
+- The dots are cities/railway stations
+- The lines are railway links that connect them
 
-The objective is to make the highest amount of points
-- occupying railway lines gives points
-- connecting the cities from objective cards gives even more points 
+The resources are train tokens and colored cards that are spent to occupy railway links
+
+- For example to occupy the line between Miami and Atlanta you'll need to spend 5 trains tokens and 5 blue cards
+
+The objective is to get the highest score
+
+- By occupying railway links
+- By connecting cities from objective cards
 </v-clicks>
+
+<!-- 
+Today we will look at this specific game: Ticket to Ride.
+Let me have by show of hand: who knows or has played to this game so far?
+
+Nice!
+
+For those who don't know, I'll give you an idea of what it its about
+ -->
 
 ---
 transition: fade-out
