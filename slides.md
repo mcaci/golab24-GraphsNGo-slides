@@ -233,24 +233,23 @@ Thanks to this property we can use graph algorithms to have our players make bet
 
 But if graph algorithms look scary to you I have good news for you
 
+---
+transition: fade-out
+layout: image
+image: /images/goodNewsAlgorithmsAreEasy.jpg
+backgroundSize: fit
+---
+
 <!-- 
-Let's see how, there are two elements that stand out:
+Let's see how Go really makes the implementation of graph algorithms easy
+
+There are two elements that stand out:
 
 1. Go can easily be written line by line from pseudocode
 2. Go has generics and interfaces which can help in making data structure adaptable to any kind of data
 
 In other words we can decouple the data structure itself from the kind of data it holds 
 -->
-
----
-transition: fade-out
-layout: lblue-fact
----
-
-Games help you develop skills
-<v-click>
-<div class="font-size-8">and Go makes game development easy</div>
-</v-click>
 
 ---
 transition: fade-out
