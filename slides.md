@@ -257,36 +257,17 @@ transition: fade-out
 
 # Go and Graphs: basic concepts
 
-Vertex
+Vertices and Edges
 
-A vertex is a node that is holding data, for simplicity we will have it comparable
+<v-click>
 
-```go
+````md magic-move {lines: true}
+```go {none|all}
+// A vertex is a node that is holding data, for simplicity we will have it comparable
 type Vertex[T comparable] struct { 
   E T 
 }
-```
-
-For Ticket to Ride a vertex is a train station which translates into
-
-```go
-type City string
-// that will be instantiated in
-newYork := Vertex[City]{E: "New York"}
-washington := Vertex[City]{E: "Washington"}
-```
-
----
-transition: fade-out
----
-
-# Go and Graphs: basic concepts
-
-Edge
-
-An edge is a pair of vertices that can hold any property
-
-```go
+// An edge is a pair of vertices that can hold any property
 type Edge[T comparable] struct {
 	X, Y *Vertex[T]
 	P    EdgeProperty
@@ -294,21 +275,23 @@ type Edge[T comparable] struct {
 type EdgeProperty any
 ```
 
-For Ticket to Ride an edge is a railway link between two cities
-
-```go
+```go {none|all}
 type City string
+// for Ticket to Ride a vertex is a train station
+newYork := Vertex[City]{E: "New York"}
+washington := Vertex[City]{E: "Washington"}
+
 // Edge
 type TrainLine Edge[City]
 // EdgeProperty to attach to the P field in the Edge
 type TrainLineProperty struct {
-	Distance int
+  Distance int
 }
-// that will be instantiated in
-newYork := Vertex[City]{E: "New York"}
-washington := Vertex[City]{E: "Washington"}
+// for Ticket to Ride an edge is a railway link between two cities
 newYorkWashington := Edge[City]{X: &newYork, Y: washington, P: TrainLineProperty{Distance: 2}}
 ```
+````
+</v-click>
 
 ---
 transition: fade-out
