@@ -152,7 +152,7 @@ transition: fade-out
 
 # A first gameplay idea
 
-The 2-Player go crazy
+The let's go crazy approach
 
 For this idea we'll simplify the rules by:
 
@@ -171,7 +171,7 @@ Let's see how this looks in the code
 <v-click>
 
 ````md magic-move {lines: true}
-```go {all|none|all}
+```go {none|all}
 package main
 
 func main() {
@@ -179,7 +179,7 @@ func main() {
 }
 ```
 
-```go {2|all}
+```go {none|all}
 package main
 
 func main() {
@@ -225,18 +225,32 @@ image: /images/aGraphToMeReallyYeah.jpeg
 backgroundSize: 90%
 ---
 
-# Ticket to Ride as a Graph
+# A better gameplay idea
 
-And it's relationship with Go
+Modelling Ticket to Ride as a Graph
 
-The game can be analyzed using graph algorithms and we will see how Go makes them easy
+Thanks to this property we can use graph algorithms to have our players make better choices
 
+But if graph algorithms look scary to you I have good news for you
+
+<!-- 
 Let's see how, there are two elements that stand out:
 
 1. Go can easily be written line by line from pseudocode
 2. Go has generics and interfaces which can help in making data structure adaptable to any kind of data
 
-In other words we can decouple the data structure itself from the kind of data it holds
+In other words we can decouple the data structure itself from the kind of data it holds 
+-->
+
+---
+transition: fade-out
+layout: lblue-fact
+---
+
+Games help you develop skills
+<v-click>
+<div class="font-size-8">and Go makes game development easy</div>
+</v-click>
 
 ---
 transition: fade-out
