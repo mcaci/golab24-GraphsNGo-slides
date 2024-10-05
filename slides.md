@@ -116,7 +116,7 @@ backgroundSize: 97%
 
 # Today's board game
 
-Ticket to Ride (add detailed picture of Miami-Atlanta)
+Ticket to Ride
 
 <v-clicks>
 
@@ -135,6 +135,8 @@ The objective is to get the highest score
 - By connecting cities from objective cards
 </v-clicks>
 
+<img v-click="[4, 5]" src="/images/atlantaMiami.png" alt="detail of the atlanta-miami route" class="absolute rounded shadow" style="top: 25%; right: 5%; height: 50%; width: 40%;"/>
+
 <!-- 
 Today we will look at this specific game: Ticket to Ride.
 Let me have by show of hand: who knows or has played to this game so far?
@@ -142,27 +144,38 @@ Let me have by show of hand: who knows or has played to this game so far?
 Nice!
 
 For those who don't know, I'll give you an idea of what it its about
+-->
+
+---
+transition: fade-out
+layout: image
+image: /images/TTR_USA_map.jpg
+backgroundSize: fit
+---
+
+<!-- 
+If you pay closer attention to the board, you'll notice one interesting property
  -->
 
 ---
 transition: fade-out
 layout: image
 image: /images/aGraphToMe.jpeg
-backgroundSize: fit 
+backgroundSize: fit
 ---
 
 ---
 transition: fade-out
 layout: image
 image: /images/TTR_USA_map.jpg
-backgroundSize: fit 
+backgroundSize: fit
 ---
 
 ---
 transition: fade-out
 layout: image
 image: /images/aGraphToMeReallyYeah.jpeg
-backgroundSize: fit 
+backgroundSize: fit
 ---
 
 ---
