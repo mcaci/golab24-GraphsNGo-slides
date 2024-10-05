@@ -148,6 +148,53 @@ For those who don't know, I'll give you an idea of what it its about
 
 ---
 transition: fade-out
+---
+
+# A first gameplay idea
+
+The 2-Player go crazy
+
+For this idea we'll simplify the rules by:
+
+- giving unlimited resources to the players
+- giving each player no objectives
+
+By this means we'll only need the list of railway links
+
+Each player will take turns to occupy the links
+
+- Either by selecting the ones with most value (deterministic and predictable)
+- Or by selecting a random link (less predictable, funnier results)
+
+Let's see how this looks in the code
+
+<v-click>
+
+````md magic-move {lines: true}
+```go {all|none|all}
+package main
+
+func main() {
+  // ...
+}
+```
+
+```go {2|all}
+package main
+
+func main() {
+  // random selection
+}
+```
+````
+</v-click>
+
+<!-- 
+The random line selection
+-->
+
+---
+transition: slide-left
 layout: image
 image: /images/TTR_USA_map.jpg
 backgroundSize: fit
@@ -158,14 +205,14 @@ If you pay closer attention to the board, you'll notice one interesting property
  -->
 
 ---
-transition: fade-out
+transition: slide-left
 layout: image
 image: /images/aGraphToMe.jpeg
 backgroundSize: fit
 ---
 
 ---
-transition: fade-out
+transition: slide-left
 layout: image
 image: /images/TTR_USA_map.jpg
 backgroundSize: fit
@@ -173,13 +220,9 @@ backgroundSize: fit
 
 ---
 transition: fade-out
-layout: image
+layout: image-right
 image: /images/aGraphToMeReallyYeah.jpeg
-backgroundSize: fit
----
-
----
-transition: fade-out
+backgroundSize: 90%
 ---
 
 # Ticket to Ride as a Graph
