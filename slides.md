@@ -75,14 +75,12 @@ LEVEL: Introductory and Overview
 
 ---
 transition: fade-out
-layout: image-right
-image: /images/michele.jpeg
-backgroundSize: 80%
+layout: intro
 ---
 
 # About myself
 
-whoami (note: change picture)
+<img src="/images/meAtCDS23.jpg" class="absolute top-15 right-25 text-right" style="width: 30%; height: auto;"/>
 
 I am a Gopher since 2018
 
@@ -97,6 +95,8 @@ I speak at conferences
 - mostly about Go and cloud topics
 
 On my free time I enjoy swimming, cooking, learning languages and playing board games
+
+- and today we're going to see one in action
 
 <!-- 
 I'm Michele, Italian from Sicily, I am a passionate Gopher since 2018 and before then I used to work in Java, Scala and C++. I always like make side projects and develop new things. Besides programming, I enjoy swimming, cooking and learning languages; currently, I'm learning Japanese: GOのワークショップへようこそ！ 
@@ -227,7 +227,7 @@ backgroundSize: 90%
 
 # A better gameplay idea
 
-Modelling Ticket to Ride as a Graph
+Modeling Ticket to Ride as a Graph
 
 Thanks to this property we can use graph algorithms to have our players make better choices
 
@@ -253,16 +253,23 @@ In other words we can decouple the data structure itself from the kind of data i
 
 ---
 transition: fade-out
+layout: section
 ---
 
-# Go and Graphs: basic concepts
+# Graphs in Go: basics blocks
 
-Vertices and Edges
+---
+transition: fade-out
+---
+
+# Vertices and Edges
+
+How we can implement them in Go and how they translate in Ticket to Ride
 
 <v-click>
 
 ````md magic-move {lines: true}
-```go {none|all}
+```go {none|1-4|5-10|all}
 // A vertex is a node that is holding data, for simplicity we will have it comparable
 type Vertex[T comparable] struct { 
   E T 
@@ -275,19 +282,19 @@ type Edge[T comparable] struct {
 type EdgeProperty any
 ```
 
-```go {none|all}
+```go {1|2-3|2-6|8-11|12-13|all}
+// Let's see an example for Ticket to Ride
+// We first make an alias of a City from a string (optional)
 type City string
-// for Ticket to Ride a vertex is a train station
+// We create city stations as vertices of our Ticket to Ride graph
 newYork := Vertex[City]{E: "New York"}
 washington := Vertex[City]{E: "Washington"}
 
-// Edge
-type TrainLine Edge[City]
-// EdgeProperty to attach to the P field in the Edge
+// We define a property for the Edge between city station vertices
 type TrainLineProperty struct {
   Distance int
 }
-// for Ticket to Ride an edge is a railway link between two cities
+// We create a Train line as an edge between two city station vertices
 newYorkWashington := Edge[City]{X: &newYork, Y: washington, P: TrainLineProperty{Distance: 2}}
 ```
 ````
@@ -297,15 +304,49 @@ newYorkWashington := Edge[City]{X: &newYork, Y: washington, P: TrainLineProperty
 transition: fade-out
 ---
 
-# Go and Graphs: basic concepts
+# Graphs
 
-Graph
+How we can implement them in Go and how they translate in Ticket to Ride
 
-A graph then is a collection of edges and vertices
+````md magic-move {lines: true}
+```go
+// ArcsList is graph representation of a collection of edges and vertices
+type ArcsList[T comparable] struct {
+	v        []*Vertex[T]
+	e        []*Edge[T]
+}
+```
 
-We can represent a graph in several ways but they share a set of common behaviors
+```go {1-4|5-10|all}
+// Let's see the example for Ticket to Ride
+newYork := Vertex[City]{E: "New York"}
+washington := Vertex[City]{E: "Washington"}
+newYorkWashington := Edge[City]{X: &newYork, Y: washington, P: TrainLineProperty{Distance: 2}}
+// Keep adding cities (vertices) and railway links (edges)
+// And add all them to the board
+board := ArcsList[City]{
+  v: []*Vertex[City]{ &newYork ,&washington /*, ...*/ }
+  e: []*Vertex[Edge]{ &newYorkWashington /*, ...*/ }
+}
+```
 
 ```go
+// ArcsList is graph representation of a collection of edges and vertices
+type ArcsList[T comparable] struct {
+	v        []*Vertex[T]
+	e        []*Edge[T]
+}
+```
+````
+
+<v-clicks>
+
+Other graph representations are based on the adjacency or incidence and the choice of which one to use is based on the memory and time to spend on the graph representation and the different algorithms.
+
+However all graph representations have share a common set of behaviors so you can easily change which representation to use
+
+```go
+// Graph is interface that defines all the common behavior that any graph representation should have
 type Graph[T comparable] interface { 
   Vertices() []*Vertex[T]
 	Edges() []*Edge[T]
@@ -315,64 +356,226 @@ type Graph[T comparable] interface {
 	AddEdge(e *Edge[T])
 	RemoveEdge(e *Edge[T])
 	ContainsEdge(e *Edge[T]) bool
+  // ...
 }
 ```
 
-One concrete representation of a graph is the list of vertices and edges:
+To have the `ArcsList` structure represent a graph it will be appropriate to implement the methods in the interface
+</v-clicks>
+
+---
+transition: fade-out
+layout: section
+---
+
+# From basics to algorithms
+
+<!-- 
+Once we have a graph up representing the board of ticket to ride, we can start reasoning on it using the algorithms we have at our disposal
+
+Let's see a few of them.
+-->
+
+---
+transition: fade-out
+---
+
+# Connected components in a graph
+
+Is there a path connecting a city station to another one?
+
+<v-clicks>
+
+At the beginning all of the cities are connected
+  
+As soon as we occupy railway links and remove the correspondent edges from the board this may not be the case anymore
+
+````md magic-move {lines: true}
+```go {all}
+// Generic is a generic visit of a graph starting from the vertex s
+func Generic[T comparable](g Graph[T], s *Vertex[T]) *Tree[T] {
+	if !g.ContainsVertex(s) {
+		return nil
+	}
+	s.Visit()
+	t := &Tree[T]{element: &s.E}
+	f := []*Vertex[T]{s}
+	for len(f) != 0 {
+		var u *Vertex[T]
+		u, f = f[0], f[1:]
+		for _, v := range g.AdjacentNodes(u) {
+			if v.Visited() {
+				continue
+			}
+			v.Visit()
+			f = append(f, v)
+			tree := t.Find(&u.E)
+			if tree != nil {
+				tree.children = append(tree.children, &Tree[T]{element: &v.E})
+			}
+		}
+	}
+	return t
+}
+```
+
+```go {all}
+type Tree[T comparable] struct {
+	element  *T
+	children []*Tree[T]
+}
+
+func (t *Tree[T]) Size() int {
+	switch {
+	case t == nil, t.element == nil:
+		return 0
+	case t.children == nil:
+		return 1
+	default:
+		size := 1
+		for i := range t.children {
+			size += t.children[i].Size()
+		}
+		return size
+	}
+}
+
+func (t *Tree[T]) Find(e *T) *Tree[T] {
+	switch {
+	case t == nil, t.element == nil:
+		return nil
+	case *t.element == *e:
+		return t
+	case t.children == nil:
+		return nil
+	default:
+		var tree *Tree[T]
+		for i := range t.children {
+			tree = t.children[i].Find(e)
+			if tree == nil {
+				continue
+			}
+			return tree
+		}
+		return nil
+	}
+}
+```
 
 ```go
-type ArcsList[T comparable] struct {
-	v        []*Vertex[T]
-	e        []*Edge[T]
+func Connected[T comparable](g Graph[T]) bool {
+	return len(g.Vertices()) == Generic(g, g.Vertices()[0]).Size()
 }
-// that for a ticket to ride board will be will be instantiated in
-newYork := Vertex[City]{E: "New York"}
-washington := Vertex[City]{E: "Washington"}
-newYorkWashington := Edge[City]{X: &newYork, Y: washington, P: TrainLineProperty{Distance: 2}}
-// ...
-board := ArcsList[City]{
-  v: []*Vertex[City]{ &newYork ,&washington, ... }
-  e: []*Vertex[Edge]{ &newYorkWashington, ... }
+```
+````
+</v-clicks>
+
+---
+transition: fade-out
+---
+
+# Shortest path
+
+If there are multiple paths connecting a city station to another one, which one is the shortest?
+
+````md magic-move {lines: true}
+```go {all}
+// Distance between two vertices
+type Distance[T comparable] struct {
+	v, u *Vertex[T]
+	d    int
+}
+
+type Weighter interface{ Weight() int }
+
+func BellmanFordDist[T comparable](g Graph[T], s *Vertex[T]) map[*Vertex[T]]*Distance[T] {
+	d := make(map[*Vertex[T]]*Distance[T])
+	vs := g.Vertices()
+	for i := range vs {
+		switch v := vs[i]; v {
+		case s:
+			d[v] = &Distance[T]{v: s, u: v, d: 0}
+		default:
+			d[v] = &Distance[T]{v: s, u: v, d: math.MaxInt}
+		}
+	}
+	canRelax := func(x, y *Vertex[T], w Weighter) bool {
+		return d[x].d+w.Weight() < d[y].d && d[x].d+w.Weight() > 0
+	}
+	relax := func(x, y *Vertex[T], w Weighter) {
+		d[y].setDistance(w.Weight() + d[x].d)
+	}
+	es := g.Edges()
+	for range vs {
+		for _, e := range es {
+			w := e.P.(Weighter)
+			switch {
+			case canRelax(e.X, e.Y, w):
+				relax(e.X, e.Y, w)
+			case canRelax(e.Y, e.X, w):
+				relax(e.Y, e.X, w)
+			}
+		}
+	}
+	return d
 }
 ```
 
-Other representations are 
-
-- Adjacency lists
-- Adjacency matrices
-- Incidence lists
-- Incidence matrices
+```go {all}
+func Shortest[T comparable](g graph.Graph[T], d map[*graph.Vertex[T]]*Distance[T], x, y *graph.Vertex[T]) []*graph.Vertex[T] {
+	if len(g.Vertices()) < 2 {
+		return nil
+	}
+	path := []*graph.Vertex[T]{y}
+	v := y
+	isShortestDist := func(u, v *graph.Vertex[T], w Weighter) bool { return d[u].d+w.Weight() == d[v].d }
+	isConnectingEdge := func(u, v *graph.Vertex[T], e *graph.Edge[T]) bool {
+		return (e.X == u && e.Y == v) || (e.X == v && e.Y == u)
+	}
+	es := g.Edges()
+	for v != x {
+	neighbourSearch:
+		for _, u := range g.AdjacentNodes(v) {
+			for _, edge := range es {
+				if !isConnectingEdge(u, v, edge) {
+					continue
+				}
+				if !isShortestDist(u, v, edge.P.(Weighter)) {
+					continue
+				}
+				path = append([]*graph.Vertex[T]{u}, path...)
+				v = u
+				break neighbourSearch
+			}
+		}
+	}
+	return path
+}
+```
+````
 
 ---
 transition: fade-out
 ---
 
-# Go and Graphs: algorithms
+# Benefits of using Go
 
-Using ticket to ride as an example
+While developing algorithms
 
-Once we have a graph up, we can start reasoning on it using the algorithms we have at our disposal
+It takes minimal Go code to translate from pseudocode, making Go an easy choice to implement them quickly
 
-- Is there a path connecting a city to another one
-  - At the beginning all of the cities are connected
-  - As soon as we occupy railway links and remove them from the initial graph this may not be the case any more
-- In graph algorithm terms
-  - Are the two nodes in the same connected component
+Generics make the introduction of data structures agnostic to the type of data they hold
+- it is easy to have a `Graph[string]` or a `Graph[int]` or `Graph[Person]`
+
+"Plug-in" interface help in separating the basic data structure from a similar one with richer information
+- For example for the shortest distance algorithm it didn't matter what was inside the EdgeProperty we used as long as we could define a `Weight()` method on it
 
 ---
 transition: fade-out
+layout: section
 ---
 
-# Go and Graphs
-
-Using ticket to ride as an example
-
-Once we have a graph up, we can start reasoning on it using the algorithms we have at our disposal
-
-- What is the shortest path between the two cities
-  - This evolves when railway links are occupied
-- In graph algorithm terms
-  - Looking for the shortest path between two nodes
+# From algorithms to gameplay
 
 ---
 transition: fade-out
@@ -380,21 +583,7 @@ transition: fade-out
 
 # Gameplay
 
-How does a player selects the next move
-
-Let's see what happens in the random case:
-
-Execution of a random game
-
----
-transition: fade-out
----
-
-# Gameplay
-
-How does a player selects the next move
-
-Let's use the knowledge we take from the graph to better select the line to occupy
+Let's use the knowledge we gained to better select the line to occupy
 
 Execution of a game using the connectivity and shortest path algoritms
 
@@ -404,201 +593,22 @@ transition: fade-out
 
 # Next steps
 
-How can the gameplay improve with the algorithms we have at our disposal?
+This is just the start of a meaningful game.
 
----
-transition: fade-out
----
+How can the gameplay improve with other algorithms we have at our disposal?
 
-# Go and Graphs
-
-Some concepts on the graphs
-
-<v-click>
-
-````md magic-move {lines: true}
-```go {all|2|2,6}
-func forwardContentToTarget(source io.Reader, target io.Writer) error {
-  bytes, err := io.ReadAll(source) // read the source
-  if err != nil {
-    return err
-  }
-  _, err = fmt.Fprint(target, bytes) // and transfer it
-  return err
-}
-```
-
-```go {2|all}
-func forwardContentToTarget(source io.Reader, target io.Writer) error {
-  _, err := io.Copy(target, source) // read the source and transfer it
-  if err != nil {
-    return err
-  }
-}
-```
-````
-</v-click>
-
-<v-click>
-How about transferring the same content to multiple targets?
-</v-click>
-
-<v-click>
-````md magic-move {lines: true}
-```go {all|2|2,6-9}
-func forwardContentToTargets(source io.Reader, targets ...io.Writer) error {
-  bytes, err := io.ReadAll(source) // read the source
-  if err != nil {
-    return err
-  }
-  for _, target := range targets {
-    _, err = fmt.Fprint(target, bytes) // and transfer it
-    return err
-  }
-  return nil
-}
-```
-
-```go {3,5|all}
-func forwardContentToTargets(source io.Reader, targets ...io.Writer) error {
-  // create a writer that includes all targets
-  dsts := io.MultiWriter(targets)
-  // read the source and transfer it
-  _, err := io.Copy(dsts, source)
-  if err != nil {
-    return err
-  }
-}
-```
-````
-</v-click>
-
----
-transition: fade-out
-layout: lblue-fact
----
-
-Gem #1: delegate the complexity of the code
-<div class="font-size-10">to the standard library</div>
-
----
-transition: fade-out
----
-
-# Example #2
-
-Creating new errors
-
-<v-click>
-````md magic-move {lines: true}
-```go
-// A new error
-err := errors.New("an error occurred")
-```
-
-```go
-// A new error with fmt.Errorf
-err := fmt.Errorf("an error occurred: %s", msg)
-```
-
-```go
-// A new error with fmt.Errorf referencing another error
-err := fmt.Errorf("an error occurred: %s", oErr.Error())
-```
-````
-</v-click>
-
-<v-clicks>
-
-Making a reference to an error via its value (%\[s|q|v]) makes it more difficult to handle
-- Unit tests broken because the error message was not matching the one expected
-
-To our help, error wrapping was released with Go [v1.13](https://tip.golang.org/doc/go1.13#error_wrapping) and multi-error wrapping with Go [v1.20](https://tip.golang.org/doc/go1.20#errors)
-
-We can replace %\[s|q|v] with %w or use __errors.Join__ to delegate to the standard library the aspect of formatting of the error and concentrate only on its creation
-</v-clicks>
-
-<!-- 
-Go [v1.13](https://tip.golang.org/doc/go1.13#error_wrapping) (Sep 2019) 
-Go [v1.20](https://tip.golang.org/doc/go1.20#errors) (Feb 2023) 
--->
-
----
-transition: fade-out
-layout: lblue-fact
----
-
-Gem #2: A human cares about the error message
-<v-click>
-<div class="font-size-8">a program cares about what kind of error it is</div>
-</v-click>
-
-
-<!-- and if you see fmt.Errorf still using %s to refer to error messages translate them to wrapped errors with no harm -->
-
----
-transition: fade-out
----
-
-# Example #3
-
-Slices and maps packages (manipulating an http.Header)
-
-<v-clicks>
-
-````md magic-move {lines: true}
-```go
-// http.Header is an alias for map[string][]string
-// update updates the header h with some headers to add and some keys to delete
-func update(h http.Header, toAdd http.Header, toDelete []string) {
-  for key, values := range toAdd {
-    for _, value := range values {
-      h.Add(key, value)
-    }
-  }
-  for _, key := range toDelete {
-    delete(h[key])
-  }
-}
-```
-
-```go
-// http.Header is an alias for map[string][]string
-// update updates the header h with some headers to add and some keys to delete
-func update(h http.Header, toAdd http.Header, toDelete []string) {
-  // Copy all key/value pairs from a source map (toAdd) to the destination one (h)
-  maps.Copy(h, toAdd)
-  // Deletes all k,v pairs where the function yields true
-  maps.DeleteFunc(h, func(k, v string)) bool { return slices.Contains(toDelete, k)}
-}
-```
-````
-
-__Maps__ and __slices__ packages were released with Go [v1.21](https://tip.golang.org/doc/go1.21#library) (Aug 2023) together with generics
-
-These packages use generics to simplify maps and slices operations
-</v-clicks>
-
----
-transition: fade-out
-layout: lblue-fact
----
-
-Gem #3: check new Go features as they released
-<v-click>
-<div class="font-size-8">and see if you can use them to simplify your code</div>
-</v-click>
+Can we tap out to other algorithm fields?
 
 ---
 transition: fade-out
 layout: image-right
-image: /images/Gophers10.jpeg
+image: /images/Gophers1.jpeg
 backgroundSize: 80%
 ---
 
 # Conclusions
 
-Go and Games go well together
+Improving in Go with Games
 
 <v-click>
 
@@ -630,7 +640,7 @@ transition: fade-out
 class: "font-size-7.8"
 ---
 
-And it will enable us to implement algorithms faster and more reliably!
+And you'll be able to create awesome things in Go!
 
 ---
 layout: lblue-end
