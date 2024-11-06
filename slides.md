@@ -63,13 +63,13 @@ layout: intro
 
 <v-clicks>
 
-I am a Gopher since 2018
+I am a proud Gopher since 2018
 
-- but also have experiences in other programming languages
+- with experiences in other programming languages too
 
-I work in Amadeus
+I work (in Go) in Amadeus
 
-- a company that creates applications in the tourism domain
+- a company that creates applications for the travel industry
 
 I like participating at conferences
 
@@ -163,7 +163,7 @@ transition: fade-out
 Let's see the code
 
 ````md magic-move {lines: true}
-```go {none|4-6|8-9|10-20|21|all}
+```go {all|4-6|8-9|10-20|21|all}
 package main
 
 func main() {
@@ -176,11 +176,11 @@ func main() {
 	// use a coin to select the player who takes the turn and play until all lines are occupied
 	var coin bool
 	for game.FreeRoutesAvailable(railwaylines) {
-		play := p1.Play()
+		playRound := p1.Play()
 		if !coin {
-			play = p2.Play()
+			playRound = p2.Play()
 		}
-		play(railwaylines)
+		playRound(railwaylines)
 		// pass the turn
 		coin = !coin
 	}
@@ -188,7 +188,7 @@ func main() {
 }
 ```
 
-```go {none|1-6|7|8-15|16-23|all}
+```go {all|1-6|7|8-15|16-23|all}
 package player
 
 type Random struct {
@@ -267,15 +267,9 @@ backgroundSize: 90%
 
 # Idea #2
 
-Let's model Ticket to Ride board as a Graph
+Let's model Ticket to Ride board as a graph
 
-<v-clicks>
-
-We can use graph algorithms to make better choices of the railway lines
-
-For this reason we'll give players as objectives 3 routes to complete
-
-</v-clicks>
+This is where we introduce graphs algorithms
 
 <!-- But if graph algorithms look scary to you I have good news for you -->
 
@@ -302,7 +296,7 @@ transition: fade-out
 layout: lblue-fact
 ---
 
-Graphs and Go
+Graphs Algorithms, Ticket To Ride and Go
 
 ---
 transition: fade-out
@@ -315,7 +309,7 @@ How we can implement them in Go and how they translate in Ticket to Ride
 <v-click>
 
 ````md magic-move {lines: true}
-```go {none|1-4|5-10|all}
+```go {none|1-4|5-10}
 // A vertex is a node that is holding data, for simplicity we will have it comparable
 type Vertex[T comparable] struct { 
   E T 
@@ -328,7 +322,7 @@ type Edge[T comparable] struct {
 type EdgeProperty any
 ```
 
-```go {1|2-5|7-10|11-12|all}
+```go {1|2-5|7-10|11-12}
 // A Ticket to Ride example
 // We create city stations as vertices of our Ticket to Ride graph
 type City string
@@ -371,7 +365,7 @@ newYorkWashington := Edge[City]{X: &newYork, Y: washington, P: TrainLineProperty
 // And add all them to the board
 board := ArcsList[City]{
   v: []*Vertex[City]{ &newYork ,&washington /*, ...*/ }
-  e: []*Vertex[Edge]{ &newYorkWashington /*, ...*/ }
+  e: []*Edge[City]{ &newYorkWashington /*, ...*/ }
 }
 
 // in other words the job that was done when collecting all the railway lines in the main
@@ -418,7 +412,7 @@ transition: fade-out
 layout: lblue-fact
 ---
 
-Graphs algorithms and Ticket to Ride
+What algorithms do we need for Ticket to Ride?
 
 <!-- 
 Once we have a graph up representing the board of ticket to ride, we can start reasoning on it using the algorithms we have at our disposal
@@ -428,69 +422,47 @@ Let's see a few of them.
 
 ---
 transition: fade-out
+layout: image-right
+image: /images/TTR_USA_map.jpg
+backgroundSize: 100%
 ---
 
-# Connected components in a graph
+# Is there a path connecting a city to another one?
 
-Is there a path connecting a city station to another one?
+Connected components in a graph
 
 <v-clicks>
 
-At the beginning all of the cities are connected
+At the beginning all of the cities of the board are connected
   
-As soon as we occupy railway lines and remove the correspondent edges from the board this may not be the case anymore
+As soon as we occupy railway lines, we remove the correspondent edge from the board and this may means that at a certain moment cities may become isolated vertices
+
+</v-clicks>
+
+---
+transition: fade-out
+---
+
+# Is there a path connecting a city to another one?
+
+Let's see the code
+
+<v-clicks>
 
 ````md magic-move {lines: true}
 ```go {all}
-// Generic is a generic visit of a graph starting from the vertex s
-func Generic[T comparable](g Graph[T], s *Vertex[T]) *Tree[T] {
-	if !g.ContainsVertex(s) {
-		return nil
-	}
-	s.Visit()
-	t := &Tree[T]{element: &s.E}
-	f := []*Vertex[T]{s}
-	for len(f) != 0 {
-		var u *Vertex[T]
-		u, f = f[0], f[1:]
-		for _, v := range g.AdjacentNodes(u) {
-			if v.Visited() {
-				continue
-			}
-			v.Visit()
-			f = append(f, v)
-			tree := t.Find(&u.E)
-			if tree != nil {
-				tree.children = append(tree.children, &Tree[T]{element: &v.E})
-			}
-		}
-	}
-	return t
+func Connected[T comparable](g Graph[T], x, y *Vertex[T]) bool {
+	return GenericVisit(g, x).Contains(&y.E)
 }
-```
+func GenericVisit[T comparable](g Graph[T], s *Vertex[T]) *Tree[T] {}
 
-```go {all}
 type Tree[T comparable] struct {
 	element  *T
 	children []*Tree[T]
 }
 
-func (t *Tree[T]) Size() int {
-	switch {
-	case t == nil, t.element == nil:
-		return 0
-	case t.children == nil:
-		return 1
-	default:
-		size := 1
-		for i := range t.children {
-			size += t.children[i].Size()
-		}
-		return size
-	}
-}
-
-func (t *Tree[T]) Find(e *T) *Tree[T] {
+func (t *Tree[T]) Contains(e *T) bool { return t.Find(e) != nil }
+func (t *Tree[T]) Find(e *T) *Tree[T] {{
 	switch {
 	case t == nil, t.element == nil:
 		return nil
@@ -509,12 +481,31 @@ func (t *Tree[T]) Find(e *T) *Tree[T] {
 		}
 		return nil
 	}
-}
+}}
 ```
 
-```go
-func Connected[T comparable](g Graph[T]) bool {
-	return len(g.Vertices()) == Generic(g, g.Vertices()[0]).Size()
+```go {all}
+func GenericVisit[T comparable](g Graph[T], s *Vertex[T]) *Tree[T] {
+	if !g.ContainsVertex(s) { return nil }
+	s.Visit()
+	t := &Tree[T]{element: &s.E}
+	toVisit := []*Vertex[T]{s}
+	for len(toVisit) != 0 {
+		var parentNode *Vertex[T]
+		parentNode, toVisit = toVisit[0], toVisit[1:]
+		for _, v := range g.AdjacentNodes(parentNode) {
+			if v.Visited() {
+				continue
+			}
+			v.Visit()
+			toVisit = append(toVisit, v)
+			tree := t.Find(&parentNode.E)
+			if tree != nil {
+				tree.children = append(tree.children, &Tree[T]{element: &v.E})
+			}
+		}
+	}
+	return t
 }
 ```
 ````
