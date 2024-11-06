@@ -629,7 +629,7 @@ layout: lblue-fact
 transition: fade-out
 ---
 
-# It is very easy to translate pseudocode to Go
+It is very easy to translate pseudocode to Go
 
 ---
 transition: fade-out
@@ -723,18 +723,6 @@ Demo time!
 
 ---
 transition: fade-out
----
-
-# Next steps
-
-This is just the start of a meaningful game.
-
-How can the gameplay improve with other algorithms we have at our disposal?
-
-Can we tap out to other algorithm fields?
-
----
-transition: fade-out
 layout: image-right
 image: /images/Gophers1.jpeg
 backgroundSize: 80%
@@ -742,30 +730,16 @@ backgroundSize: 80%
 
 # Conclusions
 
-Improving in Go with Games
+Can Go take the Ticket to Ride? Yes!
 
 <v-clicks>
 
 Games are a good opportunity to practise and learn new aspects of Go
 
-Go makes it easy to have a minimun example of gameplay working
-
-Go makes it easy to be able to implement algorithms
-</v-clicks>
-
-<v-click>
-
-There are other examples of developing games in Go:
-
-- Daniela Petruzalek's talks [Building an Indie Game in GO](https://www.youtube.com/watch?v=Oce77qCXu7I) and [Pacman from scratch](https://www.youtube.com/watch?v=SM8LTMnB4x0);
-- Drishti Jain's talk [Go Beyond the Console: Developing 2D Games in Go](https://www.youtube.com/watch?v=OBKULmYQbuU);
-- https://github.com/mcaci/wallrush to check
-</v-click>
-
-<v-click>
+Go makes it easy to translate pseudo-code in actual code and to implement algorithms
 
 __Take advantage of the simplicity that Go brings you__
-</v-click>
+</v-clicks>
 
 ---
 layout: fact
@@ -802,3 +776,26 @@ Thank you very much!
   </div>
 </div>
 <img src="/images/michelecaciQR.jpeg" class="absolute bottom-5 right-5 text-right" style="width: 20%; height: auto;"/>
+
+---
+hide: true
+transition: fade-out
+---
+
+# References and links
+
+<br/>
+
+Other examples of game development in Go:
+
+- Daniela Petruzalek's talks [Building an Indie Game in GO](https://www.youtube.com/watch?v=Oce77qCXu7I) and [Pacman from scratch](https://www.youtube.com/watch?v=SM8LTMnB4x0);
+- Drishti Jain's talk [Go Beyond the Console: Developing 2D Games in Go](https://www.youtube.com/watch?v=OBKULmYQbuU);
+- [Othello style game](https://github.com/mcaci/wallrush)
+
+The repositories used in this presentation are:
+
+- [graphgo](https://github.com/mcaci/graphgo): my library to learn graph algorithms in Go on my free time
+- [go-ticket-to-ride](https://github.com/mcaci/go-ticket-to-ride): the implementation of the ticket to ride game in Go
+- [golab24-GraphsNGo-slides](https://github.com/mcaci/golab24-GraphsNGo-slides): the link to the code of these slides
+
+Prefer to use [gonum](https://github.com/mcaci/wallrush) instead of graphgo for working with graphs as it is a more complete library
