@@ -429,13 +429,18 @@ backgroundSize: 100%
 
 # Is there a path connecting a city to another one?
 
-Connected components in a graph
+Connected vertices in a graph
 
 <v-clicks>
 
-At the beginning all of the cities of the board are connected
-  
-As soon as we occupy railway lines, we remove the correspondent edge from the board and this may means that at a certain moment cities may become isolated vertices
+The game starts with all of the cities connected by the edges representing the railway lines
+
+As soon as players occupy railway lines, the correspondent edge is removed from the graph
+
+We are going to see the following algorithms to check if two cities are still connected by railway lines:
+
+- __visit__ of a graph
+- __connectivity__ of two vertices in a graph
 
 </v-clicks>
 
@@ -450,19 +455,39 @@ Let's see the code
 <v-clicks>
 
 ````md magic-move {lines: true}
-```go {all}
-func Connected[T comparable](g Graph[T], x, y *Vertex[T]) bool {
-	return GenericVisit(g, x).Contains(&y.E)
+```go {all|3|4-7,21|8-10,20|10-13,20|6,7,10,14-15,20,21|5,10,16-19,20,22|all}
+// GenericVisit walks the graph from a source node, visiting each node it can visit only once
+func GenericVisit[T comparable](g Graph[T], s *Vertex[T]) *Tree[T] {
+	if !g.ContainsVertex(s) { return nil }
+	s.Visit()
+	t := &Tree[T]{element: &s.E}
+	queue := []*Vertex[T]{s}
+	for len(queue) != 0 {
+		var next *Vertex[T]
+		next, queue = queue[0], queue[1:]
+		for _, v := range g.AdjacentNodes(next) {
+			if v.Visited() {
+				continue
+			}
+			v.Visit()
+			queue = append(queue, v)
+			parentNode := t.Find(&next.E)
+			if subtree != nil {
+				parentNode.children = append(parentNode.children, &Tree[T]{element: &v.E})
+			}
+		}
+	}
+	return t
 }
-func GenericVisit[T comparable](g Graph[T], s *Vertex[T]) *Tree[T] {}
+```
 
+```go {all|1-4|6-21|6,10,11|6,14-19|6,15|all}
 type Tree[T comparable] struct {
 	element  *T
 	children []*Tree[T]
 }
 
-func (t *Tree[T]) Contains(e *T) bool { return t.Find(e) != nil }
-func (t *Tree[T]) Find(e *T) *Tree[T] {{
+func (t *Tree[T]) Find(e *T) *Tree[T] {
 	switch {
 	case t == nil, t.element == nil:
 		return nil
@@ -470,42 +495,23 @@ func (t *Tree[T]) Find(e *T) *Tree[T] {{
 		return t
 	case t.children == nil:
 		return nil
-	default:
-		var tree *Tree[T]
-		for i := range t.children {
-			tree = t.children[i].Find(e)
-			if tree == nil {
-				continue
-			}
-			return tree
+	default:		
+		i := slices.IndexFunc(t.children, func(t *Tree[T]) bool { return t.Find(e) != nil })
+		if i < 0 {
+			return nil
 		}
-		return nil
+		return t.children[i]
 	}
-}}
+}
 ```
 
-```go {all}
-func GenericVisit[T comparable](g Graph[T], s *Vertex[T]) *Tree[T] {
-	if !g.ContainsVertex(s) { return nil }
-	s.Visit()
-	t := &Tree[T]{element: &s.E}
-	toVisit := []*Vertex[T]{s}
-	for len(toVisit) != 0 {
-		var parentNode *Vertex[T]
-		parentNode, toVisit = toVisit[0], toVisit[1:]
-		for _, v := range g.AdjacentNodes(parentNode) {
-			if v.Visited() {
-				continue
-			}
-			v.Visit()
-			toVisit = append(toVisit, v)
-			tree := t.Find(&parentNode.E)
-			if tree != nil {
-				tree.children = append(tree.children, &Tree[T]{element: &v.E})
-			}
-		}
-	}
-	return t
+```go
+// func GenericVisit[T comparable](g Graph[T], s *Vertex[T]) *Tree[T]
+
+// Connected verifies that the vertices x and y are connected in the graph g
+// by visiting g using x as a source and checking that the output tree contains the vertex v
+func Connected[T comparable](g Graph[T], x, y *Vertex[T]) bool {
+	return GenericVisit(g, x).Find(&y.E) != nil
 }
 ```
 ````
@@ -513,43 +519,47 @@ func GenericVisit[T comparable](g Graph[T], s *Vertex[T]) *Tree[T] {
 
 ---
 transition: fade-out
+layout: image-right
+image: /images/TTR_USA_map.jpg
+backgroundSize: 100%
 ---
 
-# Shortest path
+# Of all the routes connecting two cities, which one is the shortest?
 
-If there are multiple paths connecting a city station to another one, which one is the shortest?
+Shortest path
+
+<v-clicks>
+
+If two cities are connected, there is at least one route between them
+
+We are going to see the __Bellman-Ford algorithm__ to check which route is the shortest between two cities
+
+</v-clicks>
+
+---
+transition: fade-out
+---
+
+# Bellman-Ford algorithm for the shortest path
+
+Let's see the code
+
 
 ````md magic-move {lines: true}
-```go {all}
-// Distance between two vertices
-type Distance[T comparable] struct {
-	v, u *Vertex[T]
-	d    int
-}
-
-type Weighter interface{ Weight() int }
-
-func BellmanFordDist[T comparable](g Graph[T], s *Vertex[T]) map[*Vertex[T]]*Distance[T] {
-	d := make(map[*Vertex[T]]*Distance[T])
-	vs := g.Vertices()
-	for i := range vs {
-		switch v := vs[i]; v {
-		case s:
-			d[v] = &Distance[T]{v: s, u: v, d: 0}
-		default:
-			d[v] = &Distance[T]{v: s, u: v, d: math.MaxInt}
+```go {all|2-8|9-21|all}
+func BellmanFordDistances[T comparable](g Graph[T], s *Vertex[T]) map[*Vertex[T]]*Distance[T] {
+	d := make(map[*graph.Vertex[T]]*Distance[T]) // type Distance[T comparable] struct { v, u *Vertex[T]; d int }
+	for _, v := range g.Vertices() {
+		d[v] = &Distance[T]{v: s, u: v}
+		if v != s {
+			d[v].d = math.MaxInt
 		}
 	}
-	canRelax := func(x, y *Vertex[T], w Weighter) bool {
-		return d[x].d+w.Weight() < d[y].d && d[x].d+w.Weight() > 0
-	}
-	relax := func(x, y *Vertex[T], w Weighter) {
-		d[y].setDistance(w.Weight() + d[x].d)
-	}
-	es := g.Edges()
-	for range vs {
-		for _, e := range es {
-			w := e.P.(Weighter)
+	canRelax := (x, y *graph.Vertex[T], w Weighter) bool { return d[x].d+w.Weight() < d[y].d && d[x].d+w.Weight() > 0 }
+	relax    := (x, y *graph.Vertex[T], w Weighter) 	  { d[y].setDistance(w.Weight() + d[x].d)}
+	for range g.Vertices() {
+		for _, e := range g.Edges() {
+			w := e.P.(Weighter) // type Weighter interface{ Weight() int }
 			switch {
 			case canRelax(e.X, e.Y, w):
 				relax(e.X, e.Y, w)
@@ -562,22 +572,17 @@ func BellmanFordDist[T comparable](g Graph[T], s *Vertex[T]) map[*Vertex[T]]*Dis
 }
 ```
 
-```go {all}
+```go {all|5-7,23|3,4,8-22|all}
 func Shortest[T comparable](g graph.Graph[T], d map[*graph.Vertex[T]]*Distance[T], x, y *graph.Vertex[T]) []*graph.Vertex[T] {
-	if len(g.Vertices()) < 2 {
-		return nil
-	}
+	if len(g.Vertices()) < 2 { return nil }
+	isShortestDist := func(u, v *graph.Vertex[T], w Weighter) bool { return d[u].d+w.Weight() == d[v].d }
+	isConnectingEdge := func(u, v *graph.Vertex[T], e *graph.Edge[T]) bool { return (e.X == u && e.Y == v) || (e.X == v && e.Y == u) }
 	path := []*graph.Vertex[T]{y}
 	v := y
-	isShortestDist := func(u, v *graph.Vertex[T], w Weighter) bool { return d[u].d+w.Weight() == d[v].d }
-	isConnectingEdge := func(u, v *graph.Vertex[T], e *graph.Edge[T]) bool {
-		return (e.X == u && e.Y == v) || (e.X == v && e.Y == u)
-	}
-	es := g.Edges()
 	for v != x {
 	neighbourSearch:
 		for _, u := range g.AdjacentNodes(v) {
-			for _, edge := range es {
+			for _, edge := range g.Edges() {
 				if !isConnectingEdge(u, v, edge) {
 					continue
 				}
@@ -599,17 +604,32 @@ func Shortest[T comparable](g graph.Graph[T], d map[*graph.Vertex[T]]*Distance[T
 transition: fade-out
 ---
 
-# Benefits of using Go
+# Quick note on why using Go for algorithm development
 
-While developing algorithms
+The power of simplicity
 
-It takes minimal Go code to translate from pseudocode, making Go an easy choice to implement them quickly
+<v-clicks>
 
-Generics make the introduction of data structures agnostic to the type of data they hold
-- it is easy to have a `Graph[string]` or a `Graph[int]` or `Graph[Person]`
+A common theme in Go is that its simplicity often hides the complexity that makes the language simple
 
-"Plug-in" interface help in separating the basic data structure from a similar one with richer information
-- For example for the shortest distance algorithm it didn't matter what was inside the EdgeProperty we used as long as we could define a `Weight()` method on it
+It holds the same with algorithms, despite being complex themselves, few lines of code are necessary to implement them in Go
+
+</v-clicks>
+
+<!-- 
+We have seen some of the syntax elements of Go like Generics, Interfaces and Functions as first class citizen have bubbled up quite often in the code snippets.
+And the interesting part is that they contribute to make the code look almost like pseudo-code.
+Don't get me wrong, I'm not comparing the two of them, but if you look at a textbook and see the pseudo-code for an algorithm,
+Go provides all the necessary the tools to translate pseudocode into actual code.
+Which leads me to my, probably, unpopular opinion.
+-->
+
+---
+layout: lblue-fact
+transition: fade-out
+---
+
+# It is very easy to translate pseudocode to Go
 
 ---
 transition: fade-out
