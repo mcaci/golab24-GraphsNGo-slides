@@ -1,7 +1,6 @@
 ---
 theme: seriph
-# background: /images/Gophers6.jpeg
-background: https://cover.sli.dev
+background: /images/gopherAndRail.jpg
 title: Graphs, games and Go
 info: |
   ## Graphs and Games: can Go take a ticket to ride?
@@ -55,26 +54,6 @@ Games help you develop skills and for what it matters to us, Go makes game devel
 
 ---
 transition: fade-out
----
-
-# Notes
-
-GRAPHS AND GAMES: CAN GO TAKE A TICKET TO RIDE?
-
-November 13 2024 - 12:00 (25 min)
-
-The outline of the talk should go this way
-
-- Introduce myself and my passion for board games
-- Explain the game Ticket to Ride and why I decided to implement it in Go
-- Show the creation of a Ticket to Ride board in Go
-- Explore some Graph algorithms that can give us some insights on
-- If time permits also show some gameplay examples
-
-LEVEL: Introductory and Overview
-
----
-transition: fade-out
 layout: intro
 ---
 
@@ -82,21 +61,20 @@ layout: intro
 
 <img src="/images/meAtCDS23.jpg" class="absolute top-15 right-25 text-right" style="width: 30%; height: auto;"/>
 
+<v-clicks>
+
 I am a Gopher since 2018
 
 - but also have experiences in other programming languages
 
-My company is Amadeus
+I work in Amadeus
 
-- my team that creates middleware tools in Go that help configure applications deployed in the cloud
+- a company that creates applications in the tourism domain
 
-I speak at conferences
+I like participating at conferences
 
-- mostly about Go and cloud topics
-
-On my free time I enjoy swimming, cooking, learning languages and playing board games
-
-- and today we're going to see one in action
+- But on my free time I enjoy swimming, cooking, learning languages and playing board games
+</v-clicks>
 
 <!-- 
 I'm Michele, Italian from Sicily, I am a passionate Gopher since 2018 and before then I used to work in Java, Scala and C++. I always like make side projects and develop new things. Besides programming, I enjoy swimming, cooking and learning languages; currently, I'm learning Japanese: GOのワークショップへようこそ！ 
@@ -123,15 +101,15 @@ Ticket to Ride
 The board represents the United States map
 
 - The dots are cities/railway stations
-- The lines are railway links that connect them
+- The lines are railway lines that connect them
 
-The resources are train tokens and colored cards that are spent to occupy railway links
+The resources are train tokens and colored cards that are spent to occupy railway lines
 
 - For example to occupy the line between Miami and Atlanta you'll need to spend 5 trains tokens and 5 blue cards
 
 The objective is to get the highest score
 
-- By occupying railway links
+- By occupying railway lines
 - By connecting cities from objective cards
 </v-clicks>
 
@@ -145,53 +123,115 @@ Nice!
 
 For those who don't know, I'll give you an idea of what it its about
 -->
+---
+transition: fade-out
+layout: lblue-fact
+---
+
+Let's see how to play the game in Go
 
 ---
 transition: fade-out
 ---
 
-# A first gameplay idea
+# Idea #1
 
-The let's go crazy approach
-
-For this idea we'll simplify the rules by:
-
-- giving unlimited resources to the players
-- giving each player no objectives
-
-By this means we'll only need the list of railway links
-
-Each player will take turns to occupy the links
-
-- Either by selecting the ones with most value (deterministic and predictable)
-- Or by selecting a random link (less predictable, funnier results)
-
-Let's see how this looks in the code
+We Go random
 
 <v-click>
 
+Let's simplify the rules first:
+</v-click>
+
+<v-clicks>
+
+- the number of player will be 2
+- the railway link chosen by each player will be __random__
+- each player has unlimited resources
+  - which means that each player will take turns to select a link and occupy it
+- each player has no objectives
+  - which means that the final score will be determined by which lines they occupy
+
+</v-clicks>
+
+---
+transition: fade-out
+---
+
+# Idea #1
+
+Let's see the code
+
 ````md magic-move {lines: true}
-```go {none|all}
+```go {none|4-6|8-9|10-20|21|all}
 package main
 
 func main() {
-  // ...
+	// Collect all the railway lines
+	railwaylines, err := data.RailwayLines()
+	if err != nil { /* log and exit */ }
+
+	// create the two players
+	p1, p2 := player.NewRandom(1), player.NewRandom(2)
+	// use a coin to select the player who takes the turn and play until all lines are occupied
+	var coin bool
+	for game.FreeRoutesAvailable(railwaylines) {
+		play := p1.Play()
+		if !coin {
+			play = p2.Play()
+		}
+		play(railwaylines)
+		// pass the turn
+		coin = !coin
+	}
+	slog.Info("end game", "Score P1", player.Score(p1), "Score P2", player.Score(p2))
 }
 ```
 
-```go {none|all}
-package main
+```go {none|1-6|7|8-15|16-23|all}
+package player
 
-func main() {
-  // random selection
+type Random struct {
+	id    int
+	owned []*game.TrainLine
+}
+func NewRandom(id int) *Random { return &Random{id: id} }
+func (p *Random) Play() func(g game.Board) {
+	return func(g game.Board) {
+		// select and remove a random railway line from the board
+		chosenLine := game.PopRandomLine(g)
+		// add it to the owned list
+		p.owned = append(p.owned, (*game.TrainLine)(chosenLine))
+	}
+}
+// Score sums up the value of each owned railway line
+func (p *Random) Score() int {
+	var score int
+	for i := range p.owned {
+		score += p.owned[i].Value()
+	}
+	return score
 }
 ```
 ````
-</v-click>
 
 <!-- 
-The random line selection
+And so we have our first gameplay example
 -->
+
+---
+transition: fade-out
+layout: fact
+---
+
+Demo time!
+
+---
+transition: fade-out
+layout: lblue-fact
+---
+
+Let's focus on the board for one second
 
 ---
 transition: slide-left
@@ -214,7 +254,7 @@ backgroundSize: fit
 ---
 transition: slide-left
 layout: image
-image: /images/TTR_USA_map.jpg
+image: /images/TTR_USA_map_graph.jpg
 backgroundSize: fit
 ---
 
@@ -225,13 +265,19 @@ image: /images/aGraphToMeReallyYeah.jpeg
 backgroundSize: 90%
 ---
 
-# A better gameplay idea
+# Idea #2
 
-Modeling Ticket to Ride as a Graph
+Let's model Ticket to Ride board as a Graph
 
-Thanks to this property we can use graph algorithms to have our players make better choices
+<v-clicks>
 
-But if graph algorithms look scary to you I have good news for you
+We can use graph algorithms to make better choices of the railway lines
+
+For this reason we'll give players as objectives 3 routes to complete
+
+</v-clicks>
+
+<!-- But if graph algorithms look scary to you I have good news for you -->
 
 ---
 transition: fade-out
@@ -253,10 +299,10 @@ In other words we can decouple the data structure itself from the kind of data i
 
 ---
 transition: fade-out
-layout: section
+layout: lblue-fact
 ---
 
-# Graphs in Go: basics blocks
+Graphs and Go
 
 ---
 transition: fade-out
@@ -282,11 +328,10 @@ type Edge[T comparable] struct {
 type EdgeProperty any
 ```
 
-```go {1|2-3|2-6|8-11|12-13|all}
-// Let's see an example for Ticket to Ride
-// We first make an alias of a City from a string (optional)
-type City string
+```go {1|2-5|7-10|11-12|all}
+// A Ticket to Ride example
 // We create city stations as vertices of our Ticket to Ride graph
+type City string
 newYork := Vertex[City]{E: "New York"}
 washington := Vertex[City]{E: "Washington"}
 
@@ -294,8 +339,8 @@ washington := Vertex[City]{E: "Washington"}
 type TrainLineProperty struct {
   Distance int
 }
-// We create a Train line as an edge between two city station vertices
-newYorkWashington := Edge[City]{X: &newYork, Y: washington, P: TrainLineProperty{Distance: 2}}
+// We create a train line as an edge between two city station vertices
+newYorkWashington := Edge[City]{X: &newYork, Y: &washington, P: TrainLineProperty{Distance: 2}}
 ```
 ````
 </v-click>
@@ -317,16 +362,23 @@ type ArcsList[T comparable] struct {
 }
 ```
 
-```go {1-4|5-10|all}
-// Let's see the example for Ticket to Ride
+```go {1-4|5-10|6,12-17|all}
+// A Ticket to Ride example
 newYork := Vertex[City]{E: "New York"}
 washington := Vertex[City]{E: "Washington"}
 newYorkWashington := Edge[City]{X: &newYork, Y: washington, P: TrainLineProperty{Distance: 2}}
-// Keep adding cities (vertices) and railway links (edges)
+// Keep adding cities (vertices) and railway lines (edges)
 // And add all them to the board
 board := ArcsList[City]{
   v: []*Vertex[City]{ &newYork ,&washington /*, ...*/ }
   e: []*Vertex[Edge]{ &newYorkWashington /*, ...*/ }
+}
+
+// in other words the job that was done when collecting all the railway lines in the main
+func main() {
+	// ...
+	railwaylines, err := data.RailwayLines()
+	// ...
 }
 ```
 
@@ -341,34 +393,32 @@ type ArcsList[T comparable] struct {
 
 <v-clicks>
 
-Other graph representations are based on the adjacency or incidence and the choice of which one to use is based on the memory and time to spend on the graph representation and the different algorithms.
+There are other graph representations.
 
-However all graph representations have share a common set of behaviors so you can easily change which representation to use
+The choice of the representation is based on memory and time efficiency with respect to the operations done.
+
+All graph representations share a common behavior that can be captured by creating an interface.
 
 ```go
-// Graph is interface that defines all the common behavior that any graph representation should have
 type Graph[T comparable] interface { 
   Vertices() []*Vertex[T]
-	Edges() []*Edge[T]
-	AddVertex(v *Vertex[T])
-	RemoveVertex(v *Vertex[T])
-	ContainsVertex(v *Vertex[T]) bool
-	AddEdge(e *Edge[T])
-	RemoveEdge(e *Edge[T])
-	ContainsEdge(e *Edge[T]) bool
+  Edges() []*Edge[T]
+  AddVertex(v *Vertex[T])
+  RemoveVertex(v *Vertex[T])
+  AddEdge(e *Edge[T])
+  RemoveEdge(e *Edge[T])
   // ...
 }
 ```
 
-To have the `ArcsList` structure represent a graph it will be appropriate to implement the methods in the interface
 </v-clicks>
 
 ---
 transition: fade-out
-layout: section
+layout: lblue-fact
 ---
 
-# From basics to algorithms
+Graphs algorithms and Ticket to Ride
 
 <!-- 
 Once we have a graph up representing the board of ticket to ride, we can start reasoning on it using the algorithms we have at our disposal
@@ -388,7 +438,7 @@ Is there a path connecting a city station to another one?
 
 At the beginning all of the cities are connected
   
-As soon as we occupy railway links and remove the correspondent edges from the board this may not be the case anymore
+As soon as we occupy railway lines and remove the correspondent edges from the board this may not be the case anymore
 
 ````md magic-move {lines: true}
 ```go {all}
@@ -572,20 +622,93 @@ Generics make the introduction of data structures agnostic to the type of data t
 
 ---
 transition: fade-out
-layout: section
 ---
 
-# From algorithms to gameplay
+# Back to Idea #2
+
+New rules
+
+<v-clicks>
+
+- the number of player will be 2
+- each player has unlimited resources
+  - which means that each player will take turns to select a link and occupy it
+- each player has __3__ objectives
+  - which means the railway link chosen by each player will be made by __looking at the shortest path__ available for the routes on their objective list
+
+</v-clicks>
 
 ---
 transition: fade-out
 ---
 
-# Gameplay
+# Back to Idea #2
 
-Let's use the knowledge we gained to better select the line to occupy
+Let's see the code
 
-Execution of a game using the connectivity and shortest path algoritms
+````md magic-move {lines: true}
+```go {none|4-6|8-9|10-20|21|all}
+package main
+
+func main() {
+	// Collect all the railway lines
+	railwaylines, err := data.RailwayLines()
+	if err != nil { /* log and exit */ }
+
+	// create the two players
+	p1, p2 := player.NewRandom(1), player.NewRandom(2)
+	// use a coin to select the player who takes the turn and play until all lines are occupied
+	var coin bool
+	for game.FreeRoutesAvailable(railwaylines) {
+		play := p1.Play()
+		if !coin {
+			play = p2.Play()
+		}
+		play(railwaylines)
+		// pass the turn
+		coin = !coin
+	}
+	slog.Info("end game", "Score P1", player.Score(p1), "Score P2", player.Score(p2))
+}
+```
+
+```go {none|1-6|7|8-15|16-23|all}
+package player
+
+type Random struct {
+	id    int
+	owned []*game.TrainLine
+}
+func NewRandom(id int) *Random { return &Random{id: id} }
+func (p *Random) Play() func(g game.Board) {
+	return func(g game.Board) {
+		// select and remove a random railway line from the board
+		chosenLine := game.PopRandomLine(g)
+		// add it to the owned list
+		p.owned = append(p.owned, (*game.TrainLine)(chosenLine))
+	}
+}
+// Score sums up the value of each owned railway line
+func (p *Random) Score() int {
+	var score int
+	for i := range p.owned {
+		score += p.owned[i].Value()
+	}
+	return score
+}
+```
+````
+
+<!-- 
+And so we have our first gameplay example
+-->
+
+---
+transition: fade-out
+layout: fact
+---
+
+Demo time!
 
 ---
 transition: fade-out
@@ -610,15 +733,14 @@ backgroundSize: 80%
 
 Improving in Go with Games
 
-<v-click>
+<v-clicks>
 
 Games are a good opportunity to practise and learn new aspects of Go
 
 Go makes it easy to have a minimun example of gameplay working
 
-</v-click>
-
-<v-click>Go makes it easy to be able to implement algorithms</v-click>
+Go makes it easy to be able to implement algorithms
+</v-clicks>
 
 <v-click>
 
