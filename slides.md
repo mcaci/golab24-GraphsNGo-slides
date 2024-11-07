@@ -658,16 +658,19 @@ transition: fade-out
 Let's see the code
 
 ````md magic-move {lines: true}
-```go {none|4-6|8-9|10-20|21|all}
+```go {all|7-12|all}
 package main
 
 func main() {
 	// Collect all the railway lines
 	railwaylines, err := data.RailwayLines()
 	if err != nil { /* log and exit */ }
+	// Collect all the tickets/objectives
+	tickets, err := data.Tickets()
+	if err != nil { /* log and exit */ }
 
 	// create the two players
-	p1, p2 := player.NewRandom(1), player.NewRandom(2)
+	p1, p2 := player.NewWithTickets(1, game.GetTickets(3, &tickets)),player.NewWithTickets(2, game.GetTickets(3, &tickets))
 	// use a coin to select the player who takes the turn and play until all lines are occupied
 	var coin bool
 	for game.FreeRoutesAvailable(railwaylines) {
@@ -683,36 +686,139 @@ func main() {
 }
 ```
 
-```go {none|1-6|7|8-15|16-23|all}
+```go {all|3-7|8-10|11-22|all}
 package player
 
-type Random struct {
-	id    int
-	owned []*game.TrainLine
+type WithTickets struct {
+	id         int
+	ownedLines game.Board
+	tickets    []game.Ticket
 }
-func NewRandom(id int) *Random { return &Random{id: id} }
+func NewWithTickets(id int, t []game.Ticket) *WithTickets {
+	return &WithTickets{id: id, tickets: t, ownedLines: graph.NewUndirected[game.City](graph.ArcsListType)}
+}
 func (p *Random) Play() func(g game.Board) {
-	return func(g game.Board) {
-		// select and remove a random railway line from the board
-		chosenLine := game.PopRandomLine(g)
-		// add it to the owned list
-		p.owned = append(p.owned, (*game.TrainLine)(chosenLine))
+	randomSelection := func(b game.Board) { 
+		// same as the random player but storing ownedLines in the graph
 	}
+	shortestPath := func(b game.Board) { //...
+	}
+
+	if !p.HasTicketsToComplete() {
+		return randomSelection
+	}
+	return shortestPath
 }
-// Score sums up the value of each owned railway line
-func (p *Random) Score() int {
-	var score int
-	for i := range p.owned {
-		score += p.owned[i].Value()
+```
+
+```go {all|2,4,19|5-11|11-17}
+shortestPath := func(b game.Board) {
+	localBoard := graph.Copy(b)
+updatedBoard:
+	for len(localBoard.Edges()) > 0 {
+		// Part 1: keep the door open to random selection if there are no available tickets
+		ticket, err := p.NextAvailableTicket()
+		if err != nil {
+			return randomSelection(localBoard)
+		}
+		cX, cY := game.FindCity(ticket.X, localBoard), game.FindCity(ticket.Y, localBoard)
+		tX, tY := (*graph.Vertex[game.City])(cX), (*graph.Vertex[game.City])(cY)
+
+		//  Part 2: if there is no path between the two cities, the ticket is done and you move to the next one
+		if !visit.ExistsPath(localBoard, tX, tY) {
+			ticket.Done = true
+			continue
+		}
+		// ...
 	}
-	return score
+	return
+}
+```
+
+```go {all|7,10-12|10-18}
+shortestPath := func(b game.Board) {
+	localBoard := graph.Copy(b)
+updatedBoard:
+	for len(localBoard.Edges()) > 0 {
+		// ...
+		cX, cY := game.FindCity(ticket.X, localBoard), game.FindCity(ticket.Y, localBoard)
+		tX, tY := (*graph.Vertex[game.City])(cX), (*graph.Vertex[game.City])(cY)
+		// ...
+
+		// Part 3: if there is a path between the two cities in the objective
+		// select the shortest path and take the first segment available
+		shortest := path.Shortest(localBoard, path.BellmanFordDist(localBoard, tX), tX, tY)
+		for i := 0; i < len(shortest)-1; i++ {
+			chosenLine := game.FindLineFunc(func(tl *game.TrainLine) bool {
+				return tl.X.E == shortest[i].E && tl.Y.E == shortest[i+1].E ||
+					 tl.X.E == shortest[i+1].E && tl.Y.E == shortest[i].E
+			}, localBoard)
+			chosenLineEdge := (*graph.Edge[game.City])(chosenLine)			
+			// ...
+		}
+		// ...
+	}
+	return 
+}
+```
+
+```go {all|9-13,20-22|3-4,10-11,14-18,23}
+shortestPath := func(b game.Board) {
+	localBoard := graph.Copy(b)
+updatedBoard:
+	for len(localBoard.Edges()) > 0 {
+		// ...
+		// Part 4: if the segment is occupied by the player, check the next one (inner loop)
+		// if the segment is occupied by the other player, remove the edge and recheck the shortest path (outer loop)
+		shortest := path.Shortest(localBoard, path.BellmanFordDist(localBoard, tX), tX, tY)
+		for i := 0; i < len(shortest)-1; i++ {
+			chosenLine := // ...
+			chosenLineEdge := // ...
+			owned := p.ownedLines.ContainsEdge(chosenLineEdge)
+			if owned { continue }
+			occupiedNotOwned := chosenLine.P.(*game.TrainLineProperty).Occupied
+			if occupiedNotOwned {
+				localBoard.RemoveEdge(chosenLineEdge)
+				continue updatedBoard
+			}
+			// ...			
+		}
+		// If all the segments of the ticket are owned, the ticket is done
+		ticket.Done, ticket.Ok = true, true
+	}
+	return
+}
+```
+
+```go {all|8-15|16-21|all}
+shortestPath := func(b game.Board) {
+	localBoard := graph.Copy(b)
+updatedBoard:
+	for len(localBoard.Edges()) > 0 {
+		// ...
+		shortest := path.Shortest(localBoard, path.BellmanFordDist(localBoard, tX), tX, tY)
+		for i := 0; i < len(shortest)-1; i++ {
+			chosenLine := // ...
+			chosenLineEdge := // ..
+			// ..
+			// Part 5: occupy the segment
+			chosenLine.P.(*game.TrainLineProperty).Occupy()
+			p.ownedLines.AddVertex(chosenLine.X)
+			p.ownedLines.AddVertex(chosenLine.Y)
+			p.ownedLines.AddEdge(chosenLineEdge)
+			// Part 6: Check if ticket is completed after taking the segment
+			if visit.ExistsPath(p.ownedLines, tX, tY) {
+				ticket.Done, ticket.Ok = true, true
+			}
+			// as a segment was occupied, the turn is over
+			return
+		}
+		// ...
+	}
+	return
 }
 ```
 ````
-
-<!-- 
-And so we have our first gameplay example
--->
 
 ---
 transition: fade-out
