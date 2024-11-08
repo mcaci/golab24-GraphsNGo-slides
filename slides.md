@@ -61,8 +61,6 @@ layout: intro
 
 <img src="/images/meAtCDS23.jpg" class="absolute top-15 right-25 text-right" style="width: 30%; height: auto;"/>
 
-<v-clicks>
-
 I am a proud Gopher since 2018
 
 - with experiences in other programming languages too
@@ -74,7 +72,6 @@ I work (in Go) in Amadeus
 I like participating at conferences
 
 - But on my free time I enjoy swimming, cooking, learning languages and playing board games
-</v-clicks>
 
 <!-- 
 I'm Michele, Italian from Sicily, I am a passionate Gopher since 2018 and before then I used to work in Java, Scala and C++. I always like make side projects and develop new things. Besides programming, I enjoy swimming, cooking and learning languages; currently, I'm learning Japanese: GOのワークショップへようこそ！ 
@@ -140,10 +137,7 @@ We Go random
 
 <v-click>
 
-Let's simplify the rules first:
-</v-click>
-
-<v-clicks>
+Let's simplify the rules:
 
 - the number of player will be 2
 - the railway link chosen by each player will be __random__
@@ -152,7 +146,7 @@ Let's simplify the rules first:
 - each player has no objectives
   - which means that the final score will be determined by which lines they occupy
 
-</v-clicks>
+</v-click>
 
 ---
 transition: fade-out
@@ -271,6 +265,11 @@ Let's model Ticket to Ride board as a graph
 
 This is where we introduce graphs algorithms
 
+
+- [graphgo](https://github.com/mcaci/graphgo): my library to learn graph algorithms in Go
+  - Use [gonum](https://github.com/gonum/gonum) instead of my library for appliaction that manages graphs
+- [go-ticket-to-ride](https://github.com/mcaci/go-ticket-to-ride): the implementation of the ticket to ride game in Go
+
 <!-- But if graph algorithms look scary to you I have good news for you -->
 
 ---
@@ -385,7 +384,7 @@ type ArcsList[T comparable] struct {
 ```
 ````
 
-<v-clicks>
+<v-click>
 
 There are other graph representations.
 
@@ -405,7 +404,7 @@ type Graph[T comparable] interface {
 }
 ```
 
-</v-clicks>
+</v-click>
 
 ---
 transition: fade-out
@@ -431,7 +430,7 @@ backgroundSize: 100%
 
 Connected vertices in a graph
 
-<v-clicks>
+<v-click>
 
 The game starts with all of the cities connected by the edges representing the railway lines
 
@@ -442,7 +441,7 @@ We are going to see the following algorithms to check if two cities are still co
 - __visit__ of a graph
 - __connectivity__ of two vertices in a graph
 
-</v-clicks>
+</v-click>
 
 ---
 transition: fade-out
@@ -481,32 +480,7 @@ func GenericVisit[T comparable](g Graph[T], s *Vertex[T]) *Tree[T] {
 }
 ```
 
-```go {all|1-4|6-21|6,10,11|6,14-19|6,15|all}
-type Tree[T comparable] struct {
-	element  *T
-	children []*Tree[T]
-}
-
-func (t *Tree[T]) Find(e *T) *Tree[T] {
-	switch {
-	case t == nil, t.element == nil:
-		return nil
-	case *t.element == *e:
-		return t
-	case t.children == nil:
-		return nil
-	default:		
-		i := slices.IndexFunc(t.children, func(t *Tree[T]) bool { return t.Find(e) != nil })
-		if i < 0 {
-			return nil
-		}
-		return t.children[i]
-	}
-}
-```
-
 ```go
-// func GenericVisit[T comparable](g Graph[T], s *Vertex[T]) *Tree[T]
 
 // Connected verifies that the vertices x and y are connected in the graph g
 // by visiting g using x as a source and checking that the output tree contains the vertex v
@@ -526,15 +500,12 @@ backgroundSize: 100%
 
 # Of all the routes connecting two cities, which one is the shortest?
 
-Shortest path
-
-<v-clicks>
+Shortest path algorithm
 
 If two cities are connected, there is at least one route between them
 
 We are going to see the __Bellman-Ford algorithm__ to check which route is the shortest between two cities
 
-</v-clicks>
 
 ---
 transition: fade-out
@@ -544,8 +515,6 @@ transition: fade-out
 
 Let's see the code
 
-
-````md magic-move {lines: true}
 ```go {all|2-8|9-21|all}
 func BellmanFordDistances[T comparable](g Graph[T], s *Vertex[T]) map[*Vertex[T]]*Distance[T] {
 	d := make(map[*graph.Vertex[T]]*Distance[T]) // type Distance[T comparable] struct { v, u *Vertex[T]; d int }
@@ -571,6 +540,14 @@ func BellmanFordDistances[T comparable](g Graph[T], s *Vertex[T]) map[*Vertex[T]
 	return d
 }
 ```
+
+---
+transition: fade-out
+---
+
+# Bellman-Ford algorithm for the shortest path
+
+Let's see the code
 
 ```go {all|5-7,23|3,4,8-22|all}
 func Shortest[T comparable](g graph.Graph[T], d map[*graph.Vertex[T]]*Distance[T], x, y *graph.Vertex[T]) []*graph.Vertex[T] {
@@ -598,38 +575,25 @@ func Shortest[T comparable](g graph.Graph[T], d map[*graph.Vertex[T]]*Distance[T
 	return path
 }
 ```
-````
-
----
-transition: fade-out
----
-
-# Quick note on why using Go for algorithm development
-
-The power of simplicity
-
-<v-clicks>
-
-A common theme in Go is that its simplicity often hides the complexity that makes the language simple
-
-It holds the same with algorithms, despite being complex themselves, few lines of code are necessary to implement them in Go
-
-</v-clicks>
-
-<!-- 
-We have seen some of the syntax elements of Go like Generics, Interfaces and Functions as first class citizen have bubbled up quite often in the code snippets.
-And the interesting part is that they contribute to make the code look almost like pseudo-code.
-Don't get me wrong, I'm not comparing the two of them, but if you look at a textbook and see the pseudo-code for an algorithm,
-Go provides all the necessary the tools to translate pseudocode into actual code.
-Which leads me to my, probably, unpopular opinion.
--->
 
 ---
 layout: lblue-fact
 transition: fade-out
 ---
 
-It is very easy to translate pseudocode to Go
+The simplicity of Go hides the complexity of the algorithms
+
+<!-- 
+In blocks of 20 lines we have seen the implementation of a few graph algorithms and despite the algorithms themselves are complex,
+few lines of code are necessary to implement them in Go.
+
+And this is a common theme in Go: its simplicity often hides the complexity that makes the language simple
+
+And it's the same with algorithms: in those examples we have seen some of the syntax elements like Generics, Interfaces and Functions as first class citizen that have helped us in modeling these algorithms in a way that almost like pseudo-code.
+
+In other words: if you look at a textbook and read the pseudo-code for an algorithm, and then you start implementing it in Go you'll see that
+Go provides all the necessary the to translate pseudocode into actual code very easily.
+-->
 
 ---
 transition: fade-out
@@ -637,17 +601,14 @@ transition: fade-out
 
 # Back to Idea #2
 
-New rules
+Updated rules
 
-<v-clicks>
+<v-click>
 
-- the number of player will be 2
-- each player has unlimited resources
-  - which means that each player will take turns to select a link and occupy it
-- each player has __3__ objectives
+- each player now has __3__ objectives
   - which means the railway link chosen by each player will be made by __looking at the shortest path__ available for the routes on their objective list
 
-</v-clicks>
+</v-click>
 
 ---
 transition: fade-out
