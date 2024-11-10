@@ -66,7 +66,7 @@ I work (in Go) in Amadeus
 
 - a company that creates applications for the travel industry
 
-I like participating at conferences
+I like sharing my Go knowledge at conferences
 
 - But on my free time I enjoy swimming, cooking, learning languages and playing board games
 
@@ -289,7 +289,7 @@ transition: fade-out
 layout: lblue-fact
 ---
 
-Graphs Algorithms, Ticket To Ride and Go
+Vertices, Edges and Graphs
 
 ---
 transition: fade-out
@@ -360,13 +360,6 @@ board := ArcsList[City]{
   v: []*Vertex[City]{ &newYork ,&washington /*, ...*/ }
   e: []*Edge[City]{ &newYorkWashington /*, ...*/ }
 }
-
-// in other words the job that was done when collecting all the railway lines in the main
-func main() {
-	// ...
-	railwaylines, err := data.RailwayLines()
-	// ...
-}
 ```
 
 ```go
@@ -380,9 +373,9 @@ type ArcsList[T comparable] struct {
 
 <v-click>
 
-There are other graph representations and the choice of the representation is based on memory and time efficiency with respect to the operations done.
+There are other graph representations and the choice of the representation is based on memory and time efficiency with respect to the operations done
 
-All graph representations share a common behavior that can be captured by creating an interface.
+All graph representations share a common behavior that can be captured by creating an interface
 
 ```go
 type Graph[T comparable] interface { 
@@ -403,7 +396,7 @@ transition: fade-out
 layout: lblue-fact
 ---
 
-What algorithms do we need for Ticket to Ride?
+What algorithms can we use for Ticket to Ride?
 
 <!-- 
 Once we have a graph up representing the board of ticket to ride, we can start reasoning on it using the algorithms we have at our disposal
