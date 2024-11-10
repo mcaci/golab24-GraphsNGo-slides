@@ -42,9 +42,6 @@ layout: lblue-fact
 ---
 
 Games help you develop skills
-<v-click>
-<div class="font-size-8">and Go makes game development easy</div>
-</v-click>
 
 <!-- 
 I want to start with this statement that comes from my personal experience. And this conviction has increased a lot by watching my son playing, during the course of his first year of age. He turned 1 year just a month ago by the way.
@@ -125,7 +122,7 @@ transition: fade-out
 layout: lblue-fact
 ---
 
-Let's see how to play the game in Go
+Let's see how we can play the game in Go
 
 ---
 transition: fade-out
@@ -133,20 +130,17 @@ transition: fade-out
 
 # Idea #1
 
-We Go random
+We Go random and simplify a bit the rules
 
-<v-click>
+The number of player will be 2
 
-Let's simplify the rules:
+The railway line chosen by each player will be __random__
 
-- the number of player will be 2
-- the railway link chosen by each player will be __random__
-- each player has unlimited resources
-  - which means that each player will take turns to select a link and occupy it
-- each player has no objectives
-  - which means that the final score will be determined by which lines they occupy
+Each player has unlimited resources
+- which means that each player will take turns to select a line and occupy it
 
-</v-click>
+each player has no objectives
+- which means that the final score will be determined by which lines they occupy
 
 ---
 transition: fade-out
@@ -386,9 +380,7 @@ type ArcsList[T comparable] struct {
 
 <v-click>
 
-There are other graph representations.
-
-The choice of the representation is based on memory and time efficiency with respect to the operations done.
+There are other graph representations and the choice of the representation is based on memory and time efficiency with respect to the operations done.
 
 All graph representations share a common behavior that can be captured by creating an interface.
 
@@ -430,8 +422,6 @@ backgroundSize: 100%
 
 Connected vertices in a graph
 
-<v-click>
-
 The game starts with all of the cities connected by the edges representing the railway lines
 
 As soon as players occupy railway lines, the correspondent edge is removed from the graph
@@ -440,8 +430,6 @@ We are going to see the following algorithms to check if two cities are still co
 
 - __visit__ of a graph
 - __connectivity__ of two vertices in a graph
-
-</v-click>
 
 ---
 transition: fade-out
@@ -454,7 +442,7 @@ Let's see the code
 <v-clicks>
 
 ````md magic-move {lines: true}
-```go {all|3|4-7,21|8-10,20|10-13,20|6,7,10,14-15,20,21|5,10,16-19,20,22|all}
+```go {all|4-10,20|6,7,10-13,14-15,20,21|5,10,16-19,20,22|all}
 // GenericVisit walks the graph from a source node, visiting each node it can visit only once
 func GenericVisit[T comparable](g Graph[T], s *Vertex[T]) *Tree[T] {
 	if !g.ContainsVertex(s) { return nil }
@@ -515,6 +503,7 @@ transition: fade-out
 
 Let's see the code
 
+````md magic-move {lines: true}
 ```go {all|2-8|9-21|all}
 func BellmanFordDistances[T comparable](g Graph[T], s *Vertex[T]) map[*Vertex[T]]*Distance[T] {
 	d := make(map[*graph.Vertex[T]]*Distance[T]) // type Distance[T comparable] struct { v, u *Vertex[T]; d int }
@@ -540,6 +529,7 @@ func BellmanFordDistances[T comparable](g Graph[T], s *Vertex[T]) map[*Vertex[T]
 	return d
 }
 ```
+````
 
 ---
 transition: fade-out
@@ -549,6 +539,7 @@ transition: fade-out
 
 Let's see the code
 
+````md magic-move {lines: true}
 ```go {all|5-7,23|3,4,8-22|all}
 func Shortest[T comparable](g graph.Graph[T], d map[*graph.Vertex[T]]*Distance[T], x, y *graph.Vertex[T]) []*graph.Vertex[T] {
 	if len(g.Vertices()) < 2 { return nil }
@@ -575,13 +566,14 @@ func Shortest[T comparable](g graph.Graph[T], d map[*graph.Vertex[T]]*Distance[T
 	return path
 }
 ```
+````
 
 ---
 layout: lblue-fact
 transition: fade-out
 ---
 
-The simplicity of Go hides the complexity of the algorithms
+Go's simplicity vs the algorithms' complexity
 
 <!-- 
 In blocks of 20 lines we have seen the implementation of a few graph algorithms and despite the algorithms themselves are complex,
@@ -603,12 +595,8 @@ transition: fade-out
 
 Updated rules
 
-<v-click>
-
 - each player now has __3__ objectives
-  - which means the railway link chosen by each player will be made by __looking at the shortest path__ available for the routes on their objective list
-
-</v-click>
+  - which means the railway line chosen by each player will be made by __looking at the shortest path__ available for the routes on their objective list
 
 ---
 transition: fade-out
@@ -672,111 +660,54 @@ func (p *Random) Play() func(g game.Board) {
 }
 ```
 
-```go {all|2,4,19|5-11|11-17}
+```go {all}
 shortestPath := func(b game.Board) {
 	localBoard := graph.Copy(b)
 updatedBoard:
 	for len(localBoard.Edges()) > 0 {
 		// Part 1: keep the door open to random selection if there are no available tickets
 		ticket, err := p.NextAvailableTicket()
-		if err != nil {
-			return randomSelection(localBoard)
-		}
-		cX, cY := game.FindCity(ticket.X, localBoard), game.FindCity(ticket.Y, localBoard)
-		tX, tY := (*graph.Vertex[game.City])(cX), (*graph.Vertex[game.City])(cY)
+		if err != nil {  return randomSelection(localBoard) }
 
 		//  Part 2: if there is no path between the two cities, the ticket is done and you move to the next one
-		if !visit.ExistsPath(localBoard, tX, tY) {
-			ticket.Done = true
-			continue
-		}
-		// ...
-	}
-	return
-}
-```
+		if !visit.ExistsPath(localBoard, ticket.X, ticket.Y) { ticket.Done = true; ticket.Ok = false; continue }
 
-```go {all|7,10-12|10-18}
-shortestPath := func(b game.Board) {
-	localBoard := graph.Copy(b)
-updatedBoard:
-	for len(localBoard.Edges()) > 0 {
-		// ...
-		cX, cY := game.FindCity(ticket.X, localBoard), game.FindCity(ticket.Y, localBoard)
-		tX, tY := (*graph.Vertex[game.City])(cX), (*graph.Vertex[game.City])(cY)
-		// ...
-
-		// Part 3: if there is a path between the two cities in the objective
-		// select the shortest path and take the first segment available
-		shortest := path.Shortest(localBoard, path.BellmanFordDist(localBoard, tX), tX, tY)
+	    // Part 3: if there is a path between the two cities in the objective select the shortest path and take the first segment available
+		shortest := path.Shortest(localBoard, path.BellmanFordDist(localBoard, ticket.X), ticket.X, ticket.Y)
 		for i := 0; i < len(shortest)-1; i++ {
-			chosenLine := game.FindLineFunc(func(tl *game.TrainLine) bool {
-				return tl.X.E == shortest[i].E && tl.Y.E == shortest[i+1].E ||
-					 tl.X.E == shortest[i+1].E && tl.Y.E == shortest[i].E
-			}, localBoard)
-			chosenLineEdge := (*graph.Edge[game.City])(chosenLine)			
+			chosenLine := game.FindLineFunc(game.ShortestSegment(ticket, shortest[i], shortest[i+1]), localBoard)
 			// ...
 		}
-		// ...
-	}
-	return 
-}
-```
-
-```go {all|9-13,20-22|3-4,10-11,14-18,23}
-shortestPath := func(b game.Board) {
-	localBoard := graph.Copy(b)
-updatedBoard:
-	for len(localBoard.Edges()) > 0 {
-		// ...
-		// Part 4: if the segment is occupied by the player, check the next one (inner loop)
-		// if the segment is occupied by the other player, remove the edge and recheck the shortest path (outer loop)
-		shortest := path.Shortest(localBoard, path.BellmanFordDist(localBoard, tX), tX, tY)
-		for i := 0; i < len(shortest)-1; i++ {
-			chosenLine := // ...
-			chosenLineEdge := // ...
-			owned := p.ownedLines.ContainsEdge(chosenLineEdge)
-			if owned { continue }
-			occupiedNotOwned := chosenLine.P.(*game.TrainLineProperty).Occupied
-			if occupiedNotOwned {
-				localBoard.RemoveEdge(chosenLineEdge)
-				continue updatedBoard
-			}
-			// ...			
-		}
-		// If all the segments of the ticket are owned, the ticket is done
-		ticket.Done, ticket.Ok = true, true
 	}
 	return
 }
 ```
 
-```go {all|8-15|16-21|all}
+```go {all}
 shortestPath := func(b game.Board) {
-	localBoard := graph.Copy(b)
-updatedBoard:
-	for len(localBoard.Edges()) > 0 {
-		// ...
-		shortest := path.Shortest(localBoard, path.BellmanFordDist(localBoard, tX), tX, tY)
-		for i := 0; i < len(shortest)-1; i++ {
-			chosenLine := // ...
-			chosenLineEdge := // ..
-			// ..
-			// Part 5: occupy the segment
-			chosenLine.P.(*game.TrainLineProperty).Occupy()
-			p.ownedLines.AddVertex(chosenLine.X)
-			p.ownedLines.AddVertex(chosenLine.Y)
-			p.ownedLines.AddEdge(chosenLineEdge)
-			// Part 6: Check if ticket is completed after taking the segment
-			if visit.ExistsPath(p.ownedLines, tX, tY) {
-				ticket.Done, ticket.Ok = true, true
-			}
-			// as a segment was occupied, the turn is over
-			return
+	// ...
+	// Part 3: if there is a path between the two cities in the objective select the shortest path and take the first segment available
+	shortest := path.Shortest(localBoard, path.BellmanFordDist(localBoard, ticket.X), ticket.X, ticket.Y)
+	for i := 0; i < len(shortest)-1; i++ {
+		chosenLine := game.FindLineFunc(game.ShortestSegment(ticket, shortest[i], shortest[i+1]), localBoard)
+		// Is the line owned by me?
+		owned := p.ownedLines.ContainsEdge(chosenLineEdge)
+		if owned { continue }
+		// Is the line owned by someone else?
+		occupiedNotOwned := chosenLine.P.(*game.TrainLineProperty).Occupied
+		if occupiedNotOwned {
+			localBoard.RemoveEdge(chosenLineEdge); continue updatedBoard;
 		}
-		// ...
+		// Occupy the selected line
+		chosenLine.P.(*game.TrainLineProperty).Occupy()
+		p.ownedLines.AddVertex(chosenLine.X)
+		p.ownedLines.AddVertex(chosenLine.Y)
+		p.ownedLines.AddEdge(chosenLineEdge)
+		// Check if ticket is completed after taking the line
+		if visit.ExistsPath(p.ownedLines, tX, tY) {
+			ticket.Done, ticket.Ok = true, true
+		}
 	}
-	return
 }
 ```
 ````
@@ -801,9 +732,13 @@ Can Go take the Ticket to Ride? Yes!
 
 <v-clicks>
 
-Games are a good opportunity to practise and learn new aspects of Go
+Games are a good opportunity to practise and learn new skills
+
+- About Go and beyond
 
 Go makes it easy to translate pseudo-code in actual code and to implement algorithms
+
+- No matter how complex the algorithm is
 
 __Take advantage of the simplicity that Go brings you__
 </v-clicks>
@@ -814,7 +749,7 @@ transition: fade-out
 class: "font-size-7.8"
 ---
 
-And you'll be able to create awesome things in Go!
+And you'll be able to create awesome things with Go!
 
 ---
 layout: lblue-end
