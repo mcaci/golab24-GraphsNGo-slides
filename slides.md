@@ -139,7 +139,7 @@ The railway line chosen by each player will be __random__
 Each player has unlimited resources
 - which means that each player will take turns to select a line and occupy it
 
-each player has no objectives
+Each player has no objectives
 - which means that the final score will be determined by which lines they occupy
 
 ---
