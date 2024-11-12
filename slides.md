@@ -151,7 +151,7 @@ transition: fade-out
 Let's see the code
 
 ````md magic-move {lines: true}
-```go {all|4-6|8-9|10-20|21|all}
+```go {all|4-9|10-21}
 package main
 
 func main() {
@@ -176,7 +176,7 @@ func main() {
 }
 ```
 
-```go {all|1-6|7|8-15|16-23|all}
+```go {all|1-7|8-15|16-23|all}
 package player
 
 type Random struct {
@@ -242,7 +242,7 @@ backgroundSize: fit
 ---
 transition: slide-left
 layout: image
-image: /images/TTR_USA_map_graph.jpg
+image: /images/TTR_USA_map.jpg
 backgroundSize: fit
 ---
 
@@ -302,7 +302,7 @@ How we can implement them in Go and how they translate in Ticket to Ride
 <v-click>
 
 ````md magic-move {lines: true}
-```go {none|1-4|5-10}
+```go {1-4|all}
 // A vertex is a node that is holding data, for simplicity we will have it comparable
 type Vertex[T comparable] struct { 
   E T 
@@ -315,7 +315,7 @@ type Edge[T comparable] struct {
 type EdgeProperty any
 ```
 
-```go {1|2-5|7-10|11-12}
+```go {1|2-5|all}
 // A Ticket to Ride example
 // We create city stations as vertices of our Ticket to Ride graph
 type City string
@@ -349,7 +349,7 @@ type ArcsList[T comparable] struct {
 }
 ```
 
-```go {1-4|5-10|6,12-17|all}
+```go {1-4|all}
 // A Ticket to Ride example
 newYork := Vertex[City]{E: "New York"}
 washington := Vertex[City]{E: "Washington"}
@@ -419,7 +419,7 @@ The game starts with all of the cities connected by the edges representing the r
 
 As soon as players occupy railway lines, the correspondent edge is removed from the graph
 
-We are going to see the following algorithms to check if two cities are still connected by railway lines:
+To check if two cities are still connected by railway lines we'll use
 
 - __visit__ of a graph
 - __connectivity__ of two vertices in a graph
@@ -485,8 +485,7 @@ Shortest path algorithm
 
 If two cities are connected, there is at least one route between them
 
-We are going to see the __Bellman-Ford algorithm__ to check which route is the shortest between two cities
-
+To check the shortest route between two cities we'll use the __Bellman-Ford algorithm__
 
 ---
 transition: fade-out
@@ -600,7 +599,7 @@ transition: fade-out
 Let's see the code
 
 ````md magic-move {lines: true}
-```go {all|7-12|all}
+```go {all|7-12}
 package main
 
 func main() {
@@ -628,7 +627,7 @@ func main() {
 }
 ```
 
-```go {all|3-7|8-10|11-22|all}
+```go {all|3-10|11-22|all}
 package player
 
 type WithTickets struct {
